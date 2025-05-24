@@ -1,5 +1,5 @@
-import { createGlobalStyle } from 'styled-components';
 import 'react-toastify/dist/ReactToastify.css';
+import { createGlobalStyle } from 'styled-components';
 
 const GlobalStyles = createGlobalStyle`
   * {
@@ -12,7 +12,7 @@ const GlobalStyles = createGlobalStyle`
   }
 
   body {
-    background-color: #3b3b3b;
+    background-color:rgb(17 24 39 / var(--tw-bg-opacity, 1))
   }
 
   a {

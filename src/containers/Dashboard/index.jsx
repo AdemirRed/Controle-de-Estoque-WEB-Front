@@ -1,31 +1,28 @@
 import React from 'react';
+import {
+  FaBox,
+  FaChartLine,
+  FaExchangeAlt,
+  FaShoppingCart,
+  FaSignOutAlt,
+  FaUser
+} from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { 
-  FaBox, 
-  FaShoppingCart, 
-  FaExchangeAlt, 
-  FaChartLine, 
-  FaSignOutAlt,
-  FaUser,
-  FaHome,
-  FaClipboardList
-} from 'react-icons/fa';
+import MenuSidebar from '../../components/MenuSidebar';
 import {
-  Layout,
-  Sidebar,
-  MainContent,
-  Header,
-  UserInfo,
-  LogoutButton,
-  MenuItem,
-  DashboardGrid,
   Card,
+  CardContent,
   CardHeader,
   CardTitle,
   CardValue,
-  CardContent,
-  ChartSection
+  ChartSection,
+  DashboardGrid,
+  Header,
+  Layout,
+  LogoutButton,
+  MainContent,
+  UserInfo
 } from './styles';
 
 const Dashboard = () => {
@@ -41,7 +38,6 @@ const Dashboard = () => {
     }
   };
 
-  // Dados mockados para exemplo
   const dashboardData = {
     totalProdutos: 150,
     pedidosPendentes: 12,
@@ -51,35 +47,15 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      <Sidebar>
-        <h2 style={{ color: 'white', marginBottom: '20px', textAlign: 'center' }}>
-          OnnMoveis
-        </h2>
-        
-        <MenuItem className="active">
-          <FaHome size={20} />
-          Dashboard
-        </MenuItem>
-        <MenuItem>
-          <FaBox size={20} />
-          Produtos
-        </MenuItem>
-        <MenuItem>
-          <FaClipboardList size={20} />
-          Pedidos
-        </MenuItem>
-        <MenuItem>
-          <FaExchangeAlt size={20} />
-          Movimentações
-        </MenuItem>
-      </Sidebar>
-
+      <MenuSidebar />
       <MainContent>
         <Header>
           <h1>Dashboard</h1>
           <UserInfo>
             <FaUser size={20} />
-            <span>{user?.nome || 'Usuário'}</span>
+            <span style={{ color: '#fff', marginRight: '10px' }}>
+              {user?.nome ? `Olá, ${user.nome}` : 'Carregando...'}
+            </span>
             <LogoutButton onClick={handleLogout}>
               <FaSignOutAlt size={20} />
               Sair
@@ -135,7 +111,7 @@ const Dashboard = () => {
           </DashboardGrid>
 
           <ChartSection>
-            <h2 style={{ color: '#1a237e', marginBottom: '15px' }}>Histórico de Movimentações</h2>
+            <h2 style={{ color: '#0015FF', marginBottom: '15px' }}>Histórico de Movimentações</h2>
             <div style={{ 
               height: '300px', 
               display: 'flex', 

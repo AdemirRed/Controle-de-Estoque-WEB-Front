@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import Login from '../containers/Login';
-import Dashboard from '../containers/Dashboard'; // Importe o componente Dashboard
+import Dashboard from '../containers/Dashboard';
+import Itens from '../containers/Itens';
 
 export const router = createBrowserRouter([
   {
@@ -12,7 +13,11 @@ export const router = createBrowserRouter([
     element: <Login />,
   },
   {
-    path: '/dashboard', // Adicionada a rota para o Dashboard
+    path: '/dashboard',
     element: <Dashboard />,
   },
+  {
+    path: '/itens',
+    element: <Itens />,
+  }
 ]);
