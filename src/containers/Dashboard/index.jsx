@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   FaBox,
   FaChartLine,
@@ -8,7 +8,9 @@ import {
   FaUser
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 import MenuSidebar from '../../components/MenuSidebar';
 import {
   Card,
@@ -28,7 +30,49 @@ import {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  
+  const [dashboardData, setDashboardData] = useState({
+    totalProdutos: 0,
+    pedidosPendentes: 0,
+    movimentacoes: 0,
+    valorTotal: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const response = await api.get('/itens');
+        const itens = response.data;
+        
+        // Calcula o valor total em estoque
+        const valorTotal = itens.reduce((total, item) => {
+          return total + (item.preco || 0) * (item.quantidade || 0);
+        }, 0);
+
+        setDashboardData({
+          totalProdutos: itens.length,
+          pedidosPendentes: 0, // Será implementado posteriormente
+          movimentacoes: 0, // Será implementado posteriormente
+          valorTotal: valorTotal
+        });
+      } catch (error) {
+        console.error('Erro ao carregar dados do dashboard:', error);
+        toast.error('Erro ao carregar dados do dashboard');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  const formatarMoeda = (valor) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(valor);
+  };
+
   const handleLogout = async () => {
     try {
       await signOut();
@@ -36,13 +80,6 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
     }
-  };
-
-  const dashboardData = {
-    totalProdutos: 150,
-    pedidosPendentes: 12,
-    movimentacoes: 45,
-    valorTotal: 'R$ 25.000,00'
   };
 
   return (
@@ -70,7 +107,9 @@ const Dashboard = () => {
                 <CardTitle>Total de Produtos</CardTitle>
                 <FaBox size={24} color="#1a237e" />
               </CardHeader>
-              <CardValue>{dashboardData.totalProdutos}</CardValue>
+              <CardValue>
+                {loading ? 'Carregando...' : dashboardData.totalProdutos}
+              </CardValue>
               <CardContent>
                 <p style={{ color: '#666' }}>Produtos em estoque</p>
               </CardContent>
@@ -103,7 +142,9 @@ const Dashboard = () => {
                 <CardTitle>Valor em Estoque</CardTitle>
                 <FaChartLine size={24} color="#c2185b" />
               </CardHeader>
-              <CardValue>{dashboardData.valorTotal}</CardValue>
+              <CardValue>
+                {loading ? 'Carregando...' : formatarMoeda(dashboardData.valorTotal)}
+              </CardValue>
               <CardContent>
                 <p style={{ color: '#666' }}>Total em produtos</p>
               </CardContent>
