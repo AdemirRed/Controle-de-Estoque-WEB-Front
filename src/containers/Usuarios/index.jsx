@@ -1,13 +1,13 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from 'react';
-import { FaEye, FaWindowClose } from 'react-icons/fa';
+import { FaEye, FaWindowClose, FaEdit, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import HeaderComponent from '../../components/Header';
 import MenuSidebar from '../../components/MenuSidebar';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
-import { Button, ButtonGroup, Container, Content, DetailsContainer, DetailsHeader, DetailsLabel, DetailsRow, DetailsValue, Form, FormContainer } from './styles';
+import { Button, ButtonGroup, Container, Content, DetailsContainer, DetailsHeader, DetailsLabel, DetailsRow, DetailsValue, Form, FormContainer, ActionButton, ActionButtonGroup } from './styles';
 
 function Usuarios() {
   const navigate = useNavigate();
@@ -231,30 +231,29 @@ function Usuarios() {
                       <td>{formatarData(usuario.createdAt)}</td>
                       <td>{formatarData(usuario.updatedAt)}</td>
                       <td>
-                        <button 
-                          onClick={() => loadUsuario(usuario.id)}
-                          style={{ marginRight: '8px' }}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDetails(usuario.id)}
-                          style={{ 
-                            marginRight: '8px',
-                            backgroundColor: '#bbc527'
-                          }}
-                        >
-                          <FaEye /> Detalhes
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(usuario.id)}
-                          style={{ 
-                            backgroundColor: '#dc3545',
-                            color: 'white'
-                          }}
-                        >
-                          Excluir
-                        </button>
+                        <ActionButtonGroup>
+                          <ActionButton
+                            className="edit-button"
+                            onClick={() => loadUsuario(usuario.id)}
+                            data-tooltip="Editar"
+                          >
+                            <FaEdit />
+                          </ActionButton>
+                          <ActionButton
+                            className="view-button"
+                            onClick={() => handleDetails(usuario.id)}
+                            data-tooltip="Detalhes"
+                          >
+                            <FaEye />
+                          </ActionButton>
+                          <ActionButton
+                            className="delete-button"
+                            onClick={() => handleDelete(usuario.id)}
+                            data-tooltip="Excluir"
+                          >
+                            <FaTrash />
+                          </ActionButton>
+                        </ActionButtonGroup>
                       </td>
                     </tr>
                   ))}

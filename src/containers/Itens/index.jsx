@@ -16,6 +16,7 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import {
   ActionButton,
+  ActionButtonGroup,
   AddButton,
   Button,
   ButtonGroup,
@@ -484,27 +485,29 @@ const Itens = () => {
                       <Td>{item.quantidade_minima}</Td>
                       <Td>{formatarMoeda(item.preco)}</Td>
                       <Td>
-                        <ActionButton
-                          className="edit-button"
-                          onClick={() => handleEdit(item)}
-                          data-tooltip="Editar"
-                        >
-                          <FaEdit />
-                        </ActionButton>
-                        <ActionButton
-                          className="view-button"
-                          onClick={() => handleDetails(item.id)}
-                          data-tooltip="Detalhes"
-                        >
-                          <FaEye />
-                        </ActionButton>
-                        <ActionButton
-                          className="delete-button"
-                          onClick={() => handleDelete(item.id)}
-                          data-tooltip="Excluir"
-                        >
-                          <FaTrash />
-                        </ActionButton>
+                        <ActionButtonGroup>
+                          <ActionButton
+                            className="edit-button"
+                            onClick={() => handleEdit(item)}
+                            data-tooltip="Editar"
+                          >
+                            <FaEdit />
+                          </ActionButton>
+                          <ActionButton
+                            className="view-button"
+                            onClick={() => handleDetails(item.id)}
+                            data-tooltip="Detalhes"
+                          >
+                            <FaEye />
+                          </ActionButton>
+                          <ActionButton
+                            className="delete-button"
+                            onClick={() => handleDelete(item.id)}
+                            data-tooltip="Excluir"
+                          >
+                            <FaTrash />
+                          </ActionButton>
+                        </ActionButtonGroup>
                       </Td>
                     </tr>
                   ))

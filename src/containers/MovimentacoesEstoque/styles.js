@@ -1,13 +1,21 @@
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
+
+// Sutil animação de gradiente para um toque moderno, mas discreto
+const subtleGradient = keyframes`
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+`;
 
 export const Layout = styled.div`
   display: flex;
   min-height: 100vh;
+  background: linear-gradient(120deg, #181c24 0%, #232a36 100%);
+  animation: ${subtleGradient} 24s linear infinite;
 `;
 
 export const MainContent = styled.div`
   flex: 1;
-  background-color: rgb(17 24 39 / var(--tw-bg-opacity, 1));
+  background: transparent;
 `;
 
 export const Header = styled.header`
@@ -15,16 +23,16 @@ export const Header = styled.header`
   justify-content: space-between;
   align-items: center;
   padding: 15px 30px;
-  background-color: rgb(0, 4, 14);
-  color: rgb(0, 21, 255);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background: #232a36;
+  color: #eaf6fb;
+  box-shadow: 0 2px 12px #10131a33;
 `;
 
 export const UserInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #fff;
+  color: #eaf6fb;
 `;
 
 export const LogoutButton = styled.button`
@@ -36,13 +44,14 @@ export const LogoutButton = styled.button`
   align-items: center;
   gap: 5px;
   padding: 8px 16px;
-  border-radius: 4px;
+  border-radius: 6px;
   transition: all 0.3s ease;
-  
+  box-shadow: 0 2px 8px #10131a33;
+
   &:hover {
-    background: linear-gradient(135deg, #ff3333 0%, #a31206 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(201, 20, 7, 0.3);
+    background: linear-gradient(135deg, #c91407 0%, #ff4b4b 100%);
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 4px 16px #ff4b4b55;
   }
 `;
 
@@ -53,13 +62,13 @@ export const Container = styled.div`
 export const FormContainer = styled.div`
   margin-bottom: 20px;
   padding: 20px;
-  background: #1f2937;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
-  color: #fff;
+  background: #232a36;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px #10131a33;
+  color: #eaf6fb;
 
   h2 {
-    color: #fff;
+    color: #00eaff;
     margin-bottom: 20px;
     font-size: 1.5rem;
   }
@@ -75,50 +84,52 @@ export const FormContainer = styled.div`
     }
 
     label {
-      color: #fff;
-      font-size: 0.9rem;
+      color: #eaf6fb;
+      font-size: 0.95rem;
     }
 
     input, select, textarea {
       padding: 8px;
-      border-radius: 4px;
-      border: 1px solid #4b5563;
-      background-color: #374151;
-      color: #fff;
+      border-radius: 6px;
+      border: 1px solid #232a36;
+      background-color: #181c24;
+      color: #eaf6fb;
 
       &:focus {
         outline: none;
-        border-color: #60a5fa;
+        border-color: #00eaff;
+        box-shadow: 0 0 8px #00eaff44;
       }
     }
 
     button {
-      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
       color: white;
       padding: 10px;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
       font-weight: 600;
       transition: all 0.3s ease;
 
       &:hover {
-        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        background: linear-gradient(135deg, #0077b6 0%, #00b4d8 100%);
         transform: translateY(-2px);
+        box-shadow: 0 4px 16px #00b4d855;
       }
     }
   }
 `;
 
 export const ListContainer = styled.div`
-  background: #1f2937;
+  background: #232a36;
   padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
-  color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px #10131a33;
+  color: #eaf6fb;
 
   h2 {
-    color: #fff;
+    color: #00eaff;
     margin-bottom: 20px;
     font-size: 1.5rem;
   }
@@ -131,31 +142,32 @@ export const ListContainer = styled.div`
     th, td {
       padding: 12px;
       text-align: left;
-      border-bottom: 1px solid #4b5563;
+      border-bottom: 1px solid #232a36;
     }
 
     th {
-      background-color: #374151;
-      color: #fff;
+      background-color: #181c24;
+      color: #00eaff;
       font-weight: 600;
     }
 
     td {
-      color: #fff;
+      color: #eaf6fb;
     }
 
     button {
-      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      background: linear-gradient(135deg, #ff4b4b 0%, #c91407 100%);
       color: white;
       padding: 6px 12px;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
       transition: all 0.3s ease;
 
       &:hover {
-        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        background: linear-gradient(135deg, #c91407 0%, #ff4b4b 100%);
         transform: translateY(-2px);
+        box-shadow: 0 4px 16px #ff4b4b55;
       }
     }
   }

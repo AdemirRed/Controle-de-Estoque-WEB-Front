@@ -1,32 +1,98 @@
-import styled from 'styled-components';
-import {
-  Layout,
-  MainContent,
-  MenuItem,
-  Sidebar
-} from '../Dashboard/styles';
+import styled, { keyframes } from 'styled-components';
 
-export {
-  Layout, MainContent, MenuItem, Sidebar
-};
+// Sutil animação de gradiente para um toque moderno, mas discreto
+const subtleGradient = keyframes`
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+`;
+
+export const Layout = styled.div`
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(120deg, #181c24 0%, #232a36 100%);
+  animation: ${subtleGradient} 24s linear infinite;
+`;
+
+export const MainContent = styled.div`
+  flex: 1;
+  background: transparent;
+`;
+
+export const Sidebar = styled.div`
+  width: 250px;
+  min-height: 100vh;
+  background: #181c24;
+  animation: ${subtleGradient} 24s linear infinite;
+  padding: 20px;
+  box-shadow: 2px 0 8px #10131a33;
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1), opacity 0.2s;
+  z-index: 1200;
+
+  @media (max-width: 900px) {
+    width: 180px;
+    padding: 10px;
+  }
+  @media (max-width: 600px) {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    transform: ${({ $open }) => ($open ? 'translateX(0)' : 'translateX(-110%)')};
+    opacity: ${({ $open }) => ($open ? 1 : 0)};
+    display: block;
+    width: 80vw;
+    max-width: 320px;
+    box-shadow: 2px 0 16px #10131a99;
+  }
+`;
+
+export const MenuItem = styled.div`
+  padding: 12px;
+  margin: 5px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #232a36;
+  color: #00eaff;
+  box-shadow: none;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+
+  &:hover {
+    background: #181c24;
+    color: #fff;
+    transform: scale(1.03);
+    box-shadow: 0 2px 8px #00b4d855;
+  }
+
+  &.active {
+    background: linear-gradient(90deg, #00b4d8 0%, #0077b6 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px #00b4d855;
+  }
+`;
 
 export const Container = styled.div`
   padding: 20px;
   width: 100%;
-  background-color: rgb(17 24 39 / var(--tw-bg-opacity, 1));
+  background: transparent;
 `;
 
 export const Title = styled.h1`
-  font-size: 24px;
+  font-size: 2rem;
   margin-bottom: 20px;
-  color: rgb(0, 21, 255);
+  color: #00eaff;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px #10131a;
 `;
 
 export const TableContainer = styled.div`
   width: 100%;
-  background: #1f2937;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: #232a36;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px #10131a33;
   overflow: hidden;
 `;
 
@@ -38,29 +104,35 @@ export const Table = styled.table`
 export const Th = styled.th`
   padding: 15px;
   text-align: left;
-  border-bottom: 2px solid #374151;
-  color: #fff;
-  font-weight: 600;
-  background-color: #111827;
+  border-bottom: 2px solid #232a36;
+  color: #00eaff;
+  font-weight: 700;
+  background-color: #181c24;
 `;
 
 export const Td = styled.td`
   padding: 12px 15px;
-  border-bottom: 1px solid #374151;
-  color: #fff;
-  
+  border-bottom: 1px solid #232a36;
+  color: #eaf6fb;
+
   &.nome-item {
     font-weight: 600;
     font-size: 1.1em;
-    color: #60A5FA;
+    color: #00eaff;
   }
-  
+
   &:last-child {
     display: flex;
     gap: 4px;
     justify-content: flex-start;
     align-items: center;
   }
+`;
+
+export const ActionButtonGroup = styled.div`
+  display: flex;
+  gap: 6px;
+  align-items: center;
 `;
 
 export const ActionButton = styled.button`
@@ -73,9 +145,9 @@ export const ActionButton = styled.button`
   border: none;
   cursor: pointer;
   position: relative;
-  transition: all 0.3s ease;
+  transition: all 0.2s cubic-bezier(.4,0,.2,1);
   background-color: transparent;
-  
+
   svg {
     font-size: 16px;
     color: #fff;
@@ -83,17 +155,17 @@ export const ActionButton = styled.button`
 
   &.edit-button {
     background-color: #2196f3;
-    &:hover { background-color: #1976d2; }
+    &:hover { background-color: #1976d2; transform: scale(1.12); }
   }
 
   &.view-button {
     background-color: #bbc527;
-    &:hover { background-color: #989f1f; }
+    &:hover { background-color: #989f1f; transform: scale(1.12); }
   }
 
   &.delete-button {
     background-color: #dc3545;
-    &:hover { background-color: #bb2d3b; }
+    &:hover { background-color: #bb2d3b; transform: scale(1.12); }
   }
 
   &:hover::after {
@@ -108,15 +180,16 @@ export const ActionButton = styled.button`
     border-radius: 4px;
     font-size: 12px;
     white-space: nowrap;
+    pointer-events: none;
   }
 `;
 
 export const AddButton = styled.button`
-  background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+  background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
   color: white;
   padding: 10px 20px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   margin-bottom: 20px;
   display: inline-flex;
@@ -125,11 +198,11 @@ export const AddButton = styled.button`
   font-weight: 500;
   font-size: 14px;
   transition: all 0.3s ease;
-  
+
   &:hover {
-    background: linear-gradient(135deg, #1557b0 0%, #083378 100%);
+    background: linear-gradient(135deg, #0077b6 0%, #00b4d8 100%);
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(26, 115, 232, 0.3);
+    box-shadow: 0 4px 8px #00b4d855;
   }
 
   svg {
@@ -151,11 +224,11 @@ export const FormContainer = styled.div`
 `;
 
 export const Form = styled.form`
-  background-color: #1f2937;
+  background-color: #232a36;
   padding: 24px;
-  border-radius: 8px;
+  border-radius: 12px;
   width: 400px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 16px #10131a33;
 `;
 
 export const FormGroup = styled.div`
@@ -165,32 +238,33 @@ export const FormGroup = styled.div`
 export const Label = styled.label`
   display: block;
   margin-bottom: 5px;
-  color: #fff;
+  color: #eaf6fb;
   font-weight: 500;
 `;
 
 export const Input = styled.input`
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #374151;
-  border-radius: 4px;
-  background-color: #111827;
-  color: white;
+  border: 1px solid #232a36;
+  border-radius: 6px;
+  background-color: #181c24;
+  color: #eaf6fb;
   transition: border-color 0.3s ease;
-  
+
   &:focus {
-    border-color: #1a73e8;
+    border-color: #00eaff;
     outline: none;
+    box-shadow: 0 0 8px #00eaff44;
   }
 `;
 
 export const TextArea = styled.textarea`
   width: 100%;
   padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: rgb(0, 4, 14);
-  color: white;
+  border: 1px solid #232a36;
+  border-radius: 6px;
+  background-color: #181c24;
+  color: #eaf6fb;
   min-height: 100px;
 `;
 
@@ -208,33 +282,33 @@ export const ButtonGroup = styled.div`
 export const Button = styled.button`
   padding: 8px 16px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 5px;
   font-weight: 500;
   transition: all 0.3s ease;
-  
+
   &.primary {
-    background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+    background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
     color: white;
-    
+
     &:hover {
-      background: linear-gradient(135deg, #1557b0 0%, #083378 100%);
+      background: linear-gradient(135deg, #0077b6 0%, #00b4d8 100%);
       transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(26, 115, 232, 0.3);
+      box-shadow: 0 4px 8px #00b4d855;
     }
   }
-  
+
   &.secondary {
     background: linear-gradient(135deg, #dc3545 0%, #981b1b 100%);
     color: white;
-    
+
     &:hover {
       background: linear-gradient(135deg, #bb2d3b 0%, #7c1616 100%);
       transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+      box-shadow: 0 4px 8px #dc354555;
     }
   }
 
@@ -244,41 +318,41 @@ export const Button = styled.button`
 `;
 
 export const DetailsContainer = styled.div`
-  background-color: #1f2937;
+  background-color: #232a36;
   padding: 24px;
   border-radius: 12px;
   width: 500px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 16px #10131a33;
 `;
 
 export const DetailsHeader = styled.h2`
-  color: #fff;
-  font-size: 24px;
+  color: #00eaff;
+  font-size: 2rem;
   margin-bottom: 20px;
   padding-bottom: 12px;
-  border-bottom: 2px solid #374151;
+  border-bottom: 2px solid #232a36;
 `;
 
 export const DetailsRow = styled.div`
   display: flex;
   margin-bottom: 16px;
   padding: 8px;
-  background-color: #111827;
+  background-color: #181c24;
   border-radius: 6px;
-  
+
   &:last-child {
     margin-bottom: 24px;
   }
 `;
 
 export const DetailsLabel = styled.span`
-  color:rgb(255, 255, 255);
+  color: #00eaff;
   font-weight: 600;
   width: 120px;
   flex-shrink: 0;
 `;
 
 export const DetailsValue = styled.span`
-  color: #fff;
+  color: #eaf6fb;
   flex: 1;
 `;

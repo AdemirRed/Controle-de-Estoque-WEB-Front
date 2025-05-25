@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { FaSignOutAlt, FaUser, FaBell } from 'react-icons/fa';
-import { Header, LogoutButton, UserInfo, NotificationBadge, NotificationPanel } from './styles';
 import { Button } from '@mui/material';
+import React, { useState } from 'react';
+import { FaBell, FaSignOutAlt, FaUser } from 'react-icons/fa';
+import { Header, LogoutButton, NotificationBadge, NotificationPanel, UserInfo } from './styles';
 
 const HeaderComponent = ({ title, user, onLogout }) => {
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState([]);
+  const [notifications] = useState([]);
 
-  const handleNotificationAction = async (id, action, motivo = '') => {
+  const handleNotificationAction = async (id, action) => {
     // Implementar ação de aprovação/rejeição
     if (Notification.permission === 'granted') {
       new Notification(`Pedido ${action === 'approve' ? 'aprovado' : 'rejeitado'}`);
