@@ -3,6 +3,7 @@ import Login from '../containers/Login';
 import Dashboard from '../containers/Dashboard';
 import Itens from '../containers/Itens';
 import MovimentacoesEstoque from '../containers/MovimentacoesEstoque';
+import Usuarios from '../containers/Usuarios';
 
 export const router = createBrowserRouter([
   {
@@ -24,5 +25,9 @@ export const router = createBrowserRouter([
   {
     path: '/movimentacoes-estoque',
     element: <MovimentacoesEstoque />,
+  },
+  {
+    path: '/usuarios',
+    element: <Usuarios />,
   }
 ]);

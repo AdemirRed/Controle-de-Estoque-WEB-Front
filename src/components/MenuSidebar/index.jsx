@@ -71,7 +71,10 @@ const MenuSidebar = () => {
             <FaFileAlt size={20} />
             Relatório de Pedidos
           </MenuItem>
-          <MenuItem>
+          <MenuItem
+            className={isActive('/usuarios') ? 'active' : ''}
+            onClick={() => navigate('/usuarios')}
+          >
             <FaUsers size={20} />
             Usuários
           </MenuItem>

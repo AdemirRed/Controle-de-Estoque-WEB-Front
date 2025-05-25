@@ -4,14 +4,13 @@ import {
   FaEye,
   FaPlus,
   FaSave,
-  FaSignOutAlt,
   FaTimes,
   FaTrash,
-  FaUser,
   FaWindowClose
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import HeaderComponent from '../../components/Header';
 import MenuSidebar from '../../components/MenuSidebar';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
@@ -28,19 +27,16 @@ import {
   Form,
   FormContainer,
   FormGroup,
-  Header,
   Input,
   Label,
   Layout,
-  LogoutButton,
   MainContent,
   Table,
   TableContainer,
   Td,
   TextArea,
   Th,
-  Title,
-  UserInfo
+  Title
 } from './styles';
 
 const Itens = () => {
@@ -196,20 +192,12 @@ const Itens = () => {
     <Layout>
       <MenuSidebar />
       <MainContent>
-        <Header>
-          <h1>Produtos</h1>
-          <UserInfo>
-            <FaUser size={20} />
-            <span style={{ color: '#fff', marginRight: '10px' }}>
-              {user?.nome ? `Olá, ${user.nome}` : 'Carregando...'}
-            </span>
-            <LogoutButton onClick={handleLogout}>
-              <FaSignOutAlt size={20} />
-              Sair
-            </LogoutButton>
-          </UserInfo>
-        </Header>
-
+        <HeaderComponent 
+          title="Produtos"
+          user={user}
+          onLogout={handleLogout}
+        />
+        
         <Container>
           <Title>Gerenciamento de Itens</Title>
           <AddButton onClick={() => setShowForm(true)}>

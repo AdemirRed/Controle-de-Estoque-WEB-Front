@@ -22,6 +22,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import MenuSidebar from '../../components/MenuSidebar';
+import HeaderComponent from '../../components/Header';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import {
@@ -183,20 +184,11 @@ const Dashboard = () => {
     <Layout>
       <MenuSidebar />
       <MainContent>
-        <Header>
-          <h1>Dashboard</h1>
-          <UserInfo>
-            <FaUser size={20} />
-            <span style={{ color: '#fff', marginRight: '10px' }}>
-              {user?.nome ? `Olá, ${user.nome}` : 'Carregando...'}
-            </span>
-            <LogoutButton onClick={handleLogout}>
-              <FaSignOutAlt size={20} />
-              Sair
-            </LogoutButton>
-          </UserInfo>
-        </Header>
-
+        <HeaderComponent 
+          title="Dashboard"
+          user={user}
+          onLogout={handleLogout}
+        />
         <div style={{ padding: '20px' }}>
           <DashboardGrid>
             <Card>

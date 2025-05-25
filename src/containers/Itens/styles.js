@@ -1,16 +1,13 @@
 import styled from 'styled-components';
 import {
-    Header,
     Layout,
-    LogoutButton,
     MainContent,
     MenuItem,
-    Sidebar,
-    UserInfo
+    Sidebar
 } from '../Dashboard/styles';
 
 export {
-    Header, Layout, LogoutButton, MainContent, MenuItem, Sidebar, UserInfo
+    Layout, MainContent, MenuItem, Sidebar
 };
 
 export const Container = styled.div`
