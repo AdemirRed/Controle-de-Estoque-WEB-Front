@@ -6,7 +6,6 @@ import {
   FaHandshake,
   FaHome,
   FaRuler,
-  FaTags,
   FaUsers,
   FaWarehouse
 } from 'react-icons/fa';
@@ -48,7 +47,10 @@ const MenuSidebar = () => {
       
       {user?.papel === 'admin' && (
         <>
-          <MenuItem>
+          <MenuItem
+            className={isActive('/fornecedores') ? 'active' : ''}
+            onClick={() => navigate('/fornecedores')}
+          >
             <FaHandshake size={20} />
             Fornecedores
           </MenuItem>
@@ -58,10 +60,6 @@ const MenuSidebar = () => {
           >
             <FaWarehouse size={20} />
             Movimentação de Estoque
-          </MenuItem>
-          <MenuItem>
-            <FaTags size={20} />
-            Categorias Estoque
           </MenuItem>
           <MenuItem>
             <FaRuler size={20} />

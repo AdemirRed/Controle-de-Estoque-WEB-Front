@@ -6,6 +6,7 @@ import HeaderComponent from '../../components/Header';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { Container, Content, Form } from './styles';
+import { toast } from 'react-toastify';
 
 function Usuarios() {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ function Usuarios() {
       setEditingId(id);
     } catch (error) {
       console.error('Erro ao carregar usuário:', error);
-      alert('Erro ao carregar dados do usuário');
+      toast.error('Erro ao carregar dados do usuário');
     }
   };
 
@@ -63,7 +64,7 @@ function Usuarios() {
       setUsuarios(usuariosDetalhados);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
-      alert('Erro ao carregar usuários');
+      toast.error('Erro ao carregar lista de usuários');
     }
   };
 
@@ -72,11 +73,11 @@ function Usuarios() {
     
     try {
       if (!nome.trim() || !email.trim()) {
-        alert('Nome e email são obrigatórios');
+        toast.warning('Nome e email são obrigatórios');
         return;
       }
       if (!editingId && !senha.trim()) {
-        alert('A senha é obrigatória para novos usuários');
+        toast.warning('A senha é obrigatória para novos usuários');
         return;
       }
 
@@ -95,26 +96,28 @@ function Usuarios() {
           delete userData.senha_hash;
         }
         await api.put(`/usuarios/${editingId}`, userData);
-        alert('Usuário atualizado com sucesso!');
+        toast.success('Usuário atualizado com sucesso!');
+        resetForm();
+        loadUsuarios();
       } else {
         if (!userData.nome || !userData.email || !userData.senha_hash || !userData.papel) {
-          alert('Todos os campos são obrigatórios para criar um novo usuário');
+          toast.warning('Todos os campos são obrigatórios para criar um novo usuário');
           return;
         }
         const response = await api.post('/usuarios', userData);
         if (response.data) {
-          alert('Usuário criado com sucesso!');
+          toast.success('Usuário criado com sucesso!');
           resetForm();
           loadUsuarios();
         }
       }
     } catch (error) {
       if (error.response?.data?.details) {
-        alert(error.response.data.details.join('\n'));
+        toast.error(error.response.data.details.join('\n'));
       } else if (error.response?.data?.message) {
-        alert(error.response.data.message);
+        toast.error(error.response.data.message);
       } else {
-        alert('Erro ao processar a operação. Verifique os dados e tente novamente.');
+        toast.error('Erro ao processar a operação. Verifique os dados e tente novamente.');
       }
       console.error('Erro na operação:', error);
     }
@@ -123,9 +126,11 @@ function Usuarios() {
   const handleLogout = async () => {
     try {
       await signOut();
+      toast.success('Logout realizado com sucesso');
       navigate('/login');
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
+      toast.error('Erro ao fazer logout');
     }
   };
 
