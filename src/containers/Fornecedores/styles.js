@@ -40,9 +40,10 @@ export const Content = styled.div`
       border-collapse: collapse;
       
       th, td {
-        padding: 12px 15px;
+        padding: 12px 10px;  // Reduzido o padding lateral para caber mais colunas
         text-align: left;
         border-bottom: 1px solid #374151;
+        font-size: 0.9rem;  // Reduzido o tamanho da fonte
       }
       
       th {
@@ -109,6 +110,25 @@ export const Form = styled.form`
     }
   }
   
+  .telefone-fields {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+
+    input {
+      margin-bottom: 0;
+      width: auto;
+      min-width: 60px;
+      max-width: 120px;
+      flex: 1;
+    }
+    input[name="telefone_numero"] {
+      min-width: 140px;
+      max-width: 200px;
+      flex: 2;
+    }
+  }
+
   label {
     display: block;
     margin-bottom: 15px;

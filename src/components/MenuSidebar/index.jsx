@@ -40,7 +40,10 @@ const MenuSidebar = () => {
         Produtos
       </MenuItem>
       
-      <MenuItem>
+      <MenuItem 
+        className={isActive('/pedidos') ? 'active' : ''} 
+        onClick={() => navigate('/pedidos')}
+      >
         <FaClipboardList size={20} />
         Pedidos
       </MenuItem>
@@ -61,7 +64,10 @@ const MenuSidebar = () => {
             <FaWarehouse size={20} />
             Movimentação de Estoque
           </MenuItem>
-          <MenuItem>
+          <MenuItem
+          className={isActive('/medidas') ? 'active' : ''}
+          onClick={() => navigate('/medidas')}
+          >
             <FaRuler size={20} />
             Unidade de Medida
           </MenuItem>

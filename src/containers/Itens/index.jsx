@@ -15,6 +15,7 @@ import MenuSidebar from '../../components/MenuSidebar';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import {
+  ActionButton,
   AddButton,
   Button,
   ButtonGroup,
@@ -38,6 +39,7 @@ import {
   Th,
   Title
 } from './styles';
+import FiltrosPadrao from '../../components/FiltrosPadrao';
 
 const Itens = () => {
   const navigate = useNavigate();
@@ -50,11 +52,13 @@ const Itens = () => {
     descricao: '',
     quantidade: '',
     preco: '',
-    quantidade_minima: '0' // Adicionar quantidade_minima
+    quantidade_minima: '5' // Adicionar quantidade_minima
   });
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [busca, setBusca] = useState('');
+  const [buscaPeriodo, setBuscaPeriodo] = useState([null, null]);
 
   const formatarMoeda = (valor) => {
     return valor
@@ -188,6 +192,26 @@ const Itens = () => {
     }
   };
 
+  // Filtro dos itens
+  const itensFiltrados = itens.filter(item => {
+    const buscaLower = busca.trim().toLowerCase();
+    const nomeOk = !buscaLower || (item.nome || '').toLowerCase().includes(buscaLower);
+    // Filtro por período (created_at)
+    let dataOk = true;
+    if (buscaPeriodo[0] && buscaPeriodo[1]) {
+      const dataItem = item.created_at ? new Date(item.created_at) : null;
+      if (dataItem) {
+        dataItem.setHours(0, 0, 0, 0);
+        dataOk =
+          dataItem.getTime() >= buscaPeriodo[0].setHours(0, 0, 0, 0) &&
+          dataItem.getTime() <= buscaPeriodo[1].setHours(0, 0, 0, 0);
+      } else {
+        dataOk = false;
+      }
+    }
+    return nomeOk && dataOk;
+  });
+
   return (
     <Layout>
       <MenuSidebar />
@@ -200,6 +224,37 @@ const Itens = () => {
         
         <Container>
           <Title>Gerenciamento de Itens</Title>
+          <FiltrosPadrao
+            busca={busca}
+            setBusca={setBusca}
+            buscaPeriodo={buscaPeriodo}
+            setBuscaPeriodo={setBuscaPeriodo}
+            exibirStatus={false}
+            onLimpar={() => {
+              setBusca('');
+              setBuscaPeriodo([null, null]);
+            }}
+            onHoje={() => {
+              const hoje = new Date();
+              hoje.setHours(0, 0, 0, 0);
+              setBuscaPeriodo([hoje, hoje]);
+            }}
+            onSemana={() => {
+              const hoje = new Date();
+              const inicio = new Date(hoje);
+              inicio.setDate(hoje.getDate() - hoje.getDay());
+              inicio.setHours(0, 0, 0, 0);
+              const fim = new Date(inicio);
+              fim.setDate(inicio.getDate() + 6);
+              setBuscaPeriodo([inicio, fim]);
+            }}
+            onMes={() => {
+              const hoje = new Date();
+              const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+              const fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+              setBuscaPeriodo([inicio, fim]);
+            }}
+          />
           <AddButton onClick={() => setShowForm(true)}>
             <FaPlus /> Adicionar Item
           </AddButton>
@@ -370,6 +425,20 @@ const Itens = () => {
                   <DetailsValue>{formatarMoeda(selectedItem.preco)}</DetailsValue>
                 </DetailsRow>
 
+                <DetailsRow>
+                  <DetailsLabel>Criado em:</DetailsLabel>
+                  <DetailsValue>
+                    {new Date(selectedItem.created_at).toLocaleString('pt-BR')}
+                  </DetailsValue>
+                </DetailsRow>
+                
+                <DetailsRow>
+                  <DetailsLabel>Atualizado em:</DetailsLabel>
+                  <DetailsValue>
+                    {new Date(selectedItem.updated_at).toLocaleString('pt-BR')}
+                  </DetailsValue>
+                </DetailsRow>
+
                 <ButtonGroup>
                   <Button
                     type="button"
@@ -397,45 +466,45 @@ const Itens = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <Td colSpan="5" style={{ textAlign: 'center' }}>
+                    <Td colSpan="7" style={{ textAlign: 'center' }}>
                       Carregando...
                     </Td>
                   </tr>
-                ) : itens.length === 0 ? (
+                ) : itensFiltrados.length === 0 ? (
                   <tr>
-                    <Td colSpan="5" style={{ textAlign: 'center' }}>
+                    <Td colSpan="7" style={{ textAlign: 'center' }}>
                       Nenhum item encontrado
                     </Td>
                   </tr>
                 ) : (
-                  itens.map((item) => (
+                  itensFiltrados.map((item) => (
                     <tr key={item.id}>
-                      <Td>{item.nome}</Td>
+                      <Td className="nome-item">{item.nome}</Td>
                       <Td>{item.quantidade}</Td>
                       <Td>{item.quantidade_minima}</Td>
                       <Td>{formatarMoeda(item.preco)}</Td>
                       <Td>
-                        <Button
-                          type="button"
+                        <ActionButton
+                          className="edit-button"
                           onClick={() => handleEdit(item)}
-                          style={{ marginRight: '5px' }}
+                          data-tooltip="Editar"
                         >
-                          <FaEdit /> Editar
-                        </Button>
-                        <Button
-                          type="button"
+                          <FaEdit />
+                        </ActionButton>
+                        <ActionButton
+                          className="view-button"
                           onClick={() => handleDetails(item.id)}
-                          style={{ marginRight: '5px', backgroundColor: '#bbc527'  }}
+                          data-tooltip="Detalhes"
                         >
-                          <FaEye /> Detalhes
-                        </Button>
-                        <Button
-                          type="button"
-                          className="secondary"
+                          <FaEye />
+                        </ActionButton>
+                        <ActionButton
+                          className="delete-button"
                           onClick={() => handleDelete(item.id)}
+                          data-tooltip="Excluir"
                         >
-                          <FaTrash /> Excluir
-                        </Button>
+                          <FaTrash />
+                        </ActionButton>
                       </Td>
                     </tr>
                   ))

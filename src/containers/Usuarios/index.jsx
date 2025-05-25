@@ -1,12 +1,13 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from 'react';
+import { FaEye, FaWindowClose } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import MenuSidebar from '../../components/MenuSidebar';
+import { toast } from 'react-toastify';
 import HeaderComponent from '../../components/Header';
+import MenuSidebar from '../../components/MenuSidebar';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
-import { Container, Content, Form } from './styles';
-import { toast } from 'react-toastify';
+import { Button, ButtonGroup, Container, Content, DetailsContainer, DetailsHeader, DetailsLabel, DetailsRow, DetailsValue, Form, FormContainer } from './styles';
 
 function Usuarios() {
   const navigate = useNavigate();
@@ -17,6 +18,8 @@ function Usuarios() {
   const [papel, setPapel] = useState('usuario'); // Corrigido para valor padrão do banco
   const [editingId, setEditingId] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     loadUsuarios();
@@ -32,13 +35,13 @@ function Usuarios() {
 
   const loadUsuario = async (id) => {
     try {
-      const response = await api.get(`/usuarios/${id}`);
-      const usuario = response.data;
-      console.log('Detalhes do usuário:', usuario);
-      setNome(usuario.nome);
-      setEmail(usuario.email);
-      setPapel(usuario.papel || 'usuario'); // Fallback para 'usuario' se não houver papel
-      setEditingId(id);
+      const usuarioParaEditar = usuarios.find(u => u.id === id);
+      if (usuarioParaEditar) {
+        setNome(usuarioParaEditar.nome);
+        setEmail(usuarioParaEditar.email);
+        setPapel(usuarioParaEditar.papel || 'usuario');
+        setEditingId(id);
+      }
     } catch (error) {
       console.error('Erro ao carregar usuário:', error);
       toast.error('Erro ao carregar dados do usuário');
@@ -48,20 +51,8 @@ function Usuarios() {
   const loadUsuarios = async () => {
     try {
       const response = await api.get('/usuarios');
-      // Como a lista não retorna o papel, vamos carregar os detalhes de cada usuário
-      const usuariosDetalhados = await Promise.all(
-        response.data.map(async (usuario) => {
-          try {
-            const detalhes = await api.get(`/usuarios/${usuario.id}`);
-            return { ...usuario, ...detalhes.data };
-          } catch (error) {
-            console.error(`Erro ao carregar detalhes do usuário ${usuario.id}:`, error);
-            return usuario;
-          }
-        })
-      );
-      console.log('Usuários com detalhes:', usuariosDetalhados);
-      setUsuarios(usuariosDetalhados);
+      // Não precisa mais fazer requisições individuais pois a rota já retorna todos os dados
+      setUsuarios(response.data);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
       toast.error('Erro ao carregar lista de usuários');
@@ -134,9 +125,41 @@ function Usuarios() {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (window.confirm('Tem certeza que deseja excluir este usuário?')) {
+      try {
+        await api.delete(`/usuarios/${id}`);
+        toast.success('Usuário excluído com sucesso!');
+        loadUsuarios();
+      } catch (error) {
+        console.error('Erro ao excluir usuário:', error);
+        toast.error(error.response?.data?.message || 'Erro ao excluir usuário');
+      }
+    }
+  };
+
+  const handleDetails = (id) => {
+    const usuarioSelecionado = usuarios.find(u => u.id === id);
+    if (usuarioSelecionado) {
+      setSelectedUser(usuarioSelecionado);
+      setShowDetailsModal(true);
+    } else {
+      toast.error('Usuário não encontrado');
+    }
+  };
+
   const formatarPapel = (papel) => {
     console.log('Formatando papel:', papel);
     return papel === 'admin' ? 'Administrador' : 'Usuário';
+  };
+
+  const formatarData = (data) => {
+    if (!data) return 'Não disponível';
+    try {
+      return new Date(data).toLocaleString('pt-BR');
+    } catch (error) {
+      return 'Data inválida';
+    }
   };
 
   return (
@@ -194,6 +217,8 @@ function Usuarios() {
                     <th>Nome</th>
                     <th>Email</th>
                     <th>Papel</th>
+                    <th>Data Criação</th>
+                    <th>Última Atualização</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -203,15 +228,87 @@ function Usuarios() {
                       <td>{usuario.nome}</td>
                       <td>{usuario.email}</td>
                       <td>{formatarPapel(usuario.papel)}</td>
-                      
+                      <td>{formatarData(usuario.createdAt)}</td>
+                      <td>{formatarData(usuario.updatedAt)}</td>
                       <td>
-                        <button onClick={() => loadUsuario(usuario.id)}>Editar</button>
+                        <button 
+                          onClick={() => loadUsuario(usuario.id)}
+                          style={{ marginRight: '8px' }}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDetails(usuario.id)}
+                          style={{ 
+                            marginRight: '8px',
+                            backgroundColor: '#bbc527'
+                          }}
+                        >
+                          <FaEye /> Detalhes
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(usuario.id)}
+                          style={{ 
+                            backgroundColor: '#dc3545',
+                            color: 'white'
+                          }}
+                        >
+                          Excluir
+                        </button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+
+            {showDetailsModal && selectedUser && (
+              <FormContainer>
+                <DetailsContainer>
+                  <DetailsHeader>Detalhes do Usuário</DetailsHeader>
+                  
+                  <DetailsRow>
+                    <DetailsLabel>Nome:</DetailsLabel>
+                    <DetailsValue>{selectedUser.nome}</DetailsValue>
+                  </DetailsRow>
+                  
+                  <DetailsRow>
+                    <DetailsLabel>Email:</DetailsLabel>
+                    <DetailsValue>{selectedUser.email}</DetailsValue>
+                  </DetailsRow>
+                  
+                  <DetailsRow>
+                    <DetailsLabel>Papel:</DetailsLabel>
+                    <DetailsValue>{formatarPapel(selectedUser.papel)}</DetailsValue>
+                  </DetailsRow>
+
+                  <DetailsRow>
+                    <DetailsLabel>Criado em:</DetailsLabel>
+                    <DetailsValue>
+                      {formatarData(selectedUser.createdAt)}
+                    </DetailsValue>
+                  </DetailsRow>
+                  
+                  <DetailsRow>
+                    <DetailsLabel>Atualizado em:</DetailsLabel>
+                    <DetailsValue>
+                      {formatarData(selectedUser.updatedAt)}
+                    </DetailsValue>
+                  </DetailsRow>
+
+                  <ButtonGroup>
+                    <Button
+                      type="button"
+                      className="secondary"
+                      onClick={() => setShowDetailsModal(false)}
+                    >
+                      <FaWindowClose /> Fechar
+                    </Button>
+                  </ButtonGroup>
+                </DetailsContainer>
+              </FormContainer>
+            )}
+
           </>
         ) : (
           <div style={{ 

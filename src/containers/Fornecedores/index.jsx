@@ -1,8 +1,9 @@
+/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import MenuSidebar from '../../components/MenuSidebar';
 import HeaderComponent from '../../components/Header';
+import MenuSidebar from '../../components/MenuSidebar';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { Container, Content, Form } from './styles';
@@ -14,7 +15,9 @@ function Fornecedores() {
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     nome: '',
-    telefone: '',
+    telefone_pais: '+55',
+    telefone_ddd: '',
+    telefone_numero: '',
     email: ''
   });
 
@@ -35,7 +38,33 @@ function Fornecedores() {
   const loadFornecedor = async (id) => {
     try {
       const response = await api.get(`/fornecedores/${id}`);
-      setFormData(response.data);
+      const fornecedor = response.data;
+      // Separar telefone em partes
+      let pais = '+55', ddd = '', numero = '';
+      if (fornecedor.telefone) {
+        // Extrai partes do telefone: +55 (51) 99775-6708 ou +55 (51) 9775-6708
+        const match = fornecedor.telefone.match(/^\+?(\d{2})\s*\(?(\d{2})\)?\s*([9]?\d{4,5}-?\d{4})$/);
+        if (match) {
+          pais = `+${match[1]}`;
+          ddd = match[2];
+          numero = match[3].replace(/\D/g, '');
+        } else {
+          // fallback: só números
+          const onlyNums = fornecedor.telefone.replace(/\D/g, '');
+          if (onlyNums.length >= 12) {
+            pais = `+${onlyNums.slice(0,2)}`;
+            ddd = onlyNums.slice(2,4);
+            numero = onlyNums.slice(4);
+          }
+        }
+      }
+      setFormData({
+        nome: fornecedor.nome || '',
+        telefone_pais: pais,
+        telefone_ddd: ddd,
+        telefone_numero: numero,
+        email: fornecedor.email || ''
+      });
       setEditingId(id);
     } catch (error) {
       console.error('Erro ao carregar fornecedor:', error);
@@ -54,11 +83,18 @@ function Fornecedores() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Montar telefone no formato: +55 (51) 997756708
+      const telefone = `${formData.telefone_pais} (${formData.telefone_ddd}) ${formData.telefone_numero}`;
+      const payload = {
+        nome: formData.nome,
+        telefone,
+        email: formData.email
+      };
       if (editingId) {
-        await api.put(`/fornecedores/${editingId}`, formData);
+        await api.put(`/fornecedores/${editingId}`, payload);
         toast.success('Fornecedor atualizado com sucesso!');
       } else {
-        await api.post('/fornecedores', formData);
+        await api.post('/fornecedores', payload);
         toast.success('Fornecedor cadastrado com sucesso!');
       }
       resetForm();
@@ -72,7 +108,9 @@ function Fornecedores() {
   const resetForm = () => {
     setFormData({
       nome: '',
-      telefone: '',
+      telefone_pais: '+55',
+      telefone_ddd: '',
+      telefone_numero: '',
       email: ''
     });
     setEditingId(null);
@@ -97,6 +135,15 @@ function Fornecedores() {
       navigate('/login');
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
+    }
+  };
+
+  const formatarData = (data) => {
+    if (!data) return 'Não disponível';
+    try {
+      return new Date(data).toLocaleString('pt-BR');
+    } catch (error) {
+      return 'Data inválida';
     }
   };
 
@@ -126,13 +173,35 @@ function Fornecedores() {
 
               <label>
                 <span>Telefone</span>
-                <input
-                  type="tel"
-                  name="telefone"
-                  value={formData.telefone}
-                  onChange={handleInputChange}
-                  required
-                />
+                <div className="telefone-fields">
+                  <input
+                    type="text"
+                    name="telefone_pais"
+                    value={formData.telefone_pais}
+                    onChange={handleInputChange}
+                    maxLength={3}
+                    style={{ width: 50 }}
+                    required
+                  />
+                  <input
+                    type="text"
+                    name="telefone_ddd"
+                    value={formData.telefone_ddd}
+                    onChange={handleInputChange}
+                    maxLength={2}
+                    placeholder="DDD"
+                    required
+                  />
+                  <input
+                    type="text"
+                    name="telefone_numero"
+                    value={formData.telefone_numero}
+                    onChange={handleInputChange}
+                    maxLength={9}
+                    placeholder="Número"
+                    required
+                  />
+                </div>
               </label>
 
               <label>
@@ -163,6 +232,8 @@ function Fornecedores() {
                     <th>Nome</th>
                     <th>Telefone</th>
                     <th>Email</th>
+                    <th>Data Criação</th>
+                    <th>Última Atualização</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -172,6 +243,8 @@ function Fornecedores() {
                       <td>{fornecedor.nome}</td>
                       <td>{fornecedor.telefone}</td>
                       <td>{fornecedor.email || '-'}</td>
+                      <td>{formatarData(fornecedor.createdAt)}</td>
+                      <td>{formatarData(fornecedor.updatedAt)}</td>
                       <td>
                         <button 
                           onClick={() => loadFornecedor(fornecedor.id)}

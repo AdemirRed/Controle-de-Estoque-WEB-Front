@@ -84,9 +84,18 @@ export const Content = styled.div`
         transition: all 0.3s ease;
         
         &:hover {
-          background: #3182CE;
           transform: translateY(-1px);
           box-shadow: 0 4px 8px rgba(66, 153, 225, 0.3);
+        }
+
+        // Adicione estilos específicos para o botão de excluir
+        &[onClick*="handleDelete"] {
+          background: #dc3545;
+          
+          &:hover {
+            background: #c82333;
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+          }
         }
       }
     }
@@ -214,5 +223,91 @@ export const Form = styled.form`
     margin: 0;
     max-width: 100%;
     box-shadow: none;
+  }
+`;
+
+export const DetailsContainer = styled.div`
+  background-color: #1f2937;
+  padding: 24px;
+  border-radius: 12px;
+  width: 500px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+`;
+
+export const DetailsHeader = styled.h2`
+  color: #fff;
+  font-size: 24px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #374151;
+`;
+
+export const DetailsRow = styled.div`
+  display: flex;
+  margin-bottom: 16px;
+  padding: 8px;
+  background-color: #111827;
+  border-radius: 6px;
+`;
+
+export const DetailsLabel = styled.span`
+  color: rgb(255, 255, 255);
+  font-weight: 600;
+  width: 120px;
+  flex-shrink: 0;
+`;
+
+export const DetailsValue = styled.span`
+  color: #fff;
+  flex: 1;
+`;
+
+export const FormContainer = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(4, 8, 8, 0.62);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+export const ButtonGroup = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+`;
+
+export const Button = styled.button`
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  
+  &.primary {
+    background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+    color: white;
+    
+    &:hover {
+      background: linear-gradient(135deg, #1557b0 0%, #083378 100%);
+    }
+  }
+  
+  &.secondary {
+    background: linear-gradient(135deg, #dc3545 0%, #981b1b 100%);
+    color: white;
+    
+    &:hover {
+      background: linear-gradient(135deg, #bb2d3b 0%, #7c1616 100%);
+    }
   }
 `;

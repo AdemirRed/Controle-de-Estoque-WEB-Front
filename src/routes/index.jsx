@@ -1,10 +1,12 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import Login from '../containers/Login';
 import Dashboard from '../containers/Dashboard';
-import Itens from '../containers/Itens';
-import MovimentacoesEstoque from '../containers/MovimentacoesEstoque';
-import Usuarios from '../containers/Usuarios';
 import Fornecedores from '../containers/Fornecedores';
+import Itens from '../containers/Itens';
+import Login from '../containers/Login';
+import MovimentacoesEstoque from '../containers/MovimentacoesEstoque';
+import UnidadesMedida from '../containers/UnidadesMedida';
+import Usuarios from '../containers/Usuarios';
+import Pedidos from '../containers/Pedidos';
 
 export const router = createBrowserRouter([
   {
@@ -34,5 +36,13 @@ export const router = createBrowserRouter([
   {
     path: '/fornecedores',
     element: <Fornecedores />,
+  },
+  {
+    path: '/medidas',
+    element: <UnidadesMedida />,
+  },
+  {
+    path: '/pedidos',
+    element: <Pedidos />,
   }
 ]);

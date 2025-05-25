@@ -1,14 +1,4 @@
 import styled from 'styled-components';
-import {
-  Layout,
-  MainContent,
-  MenuItem,
-  Sidebar
-} from '../Dashboard/styles';
-
-export {
-  Layout, MainContent, MenuItem, Sidebar
-};
 
 export const Container = styled.div`
   padding: 20px;
@@ -27,11 +17,12 @@ export const TableContainer = styled.div`
   background: #1f2937;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  overflow-x: auto; // Adicionar scroll horizontal
 `;
 
 export const Table = styled.table`
   width: 100%;
+  min-width: 800px; // Largura mínima para evitar compressão
   border-collapse: collapse;
 `;
 
@@ -49,65 +40,11 @@ export const Td = styled.td`
   border-bottom: 1px solid #374151;
   color: #fff;
   
-  &.nome-item {
-    font-weight: 600;
-    font-size: 1.1em;
-    color: #60A5FA;
-  }
-  
   &:last-child {
     display: flex;
-    gap: 4px;
+    gap: 8px;
     justify-content: flex-start;
     align-items: center;
-  }
-`;
-
-export const ActionButton = styled.button`
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  cursor: pointer;
-  position: relative;
-  transition: all 0.3s ease;
-  background-color: transparent;
-  
-  svg {
-    font-size: 16px;
-    color: #fff;
-  }
-
-  &.edit-button {
-    background-color: #2196f3;
-    &:hover { background-color: #1976d2; }
-  }
-
-  &.view-button {
-    background-color: #bbc527;
-    &:hover { background-color: #989f1f; }
-  }
-
-  &.delete-button {
-    background-color: #dc3545;
-    &:hover { background-color: #bb2d3b; }
-  }
-
-  &:hover::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: -25px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    white-space: nowrap;
   }
 `;
 
@@ -123,17 +60,11 @@ export const AddButton = styled.button`
   align-items: center;
   gap: 8px;
   font-weight: 500;
-  font-size: 14px;
   transition: all 0.3s ease;
   
   &:hover {
     background: linear-gradient(135deg, #1557b0 0%, #083378 100%);
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(26, 115, 232, 0.3);
-  }
-
-  svg {
-    font-size: 16px;
   }
 `;
 
@@ -176,7 +107,6 @@ export const Input = styled.input`
   border-radius: 4px;
   background-color: #111827;
   color: white;
-  transition: border-color 0.3s ease;
   
   &:focus {
     border-color: #1a73e8;
@@ -184,25 +114,11 @@ export const Input = styled.input`
   }
 `;
 
-export const TextArea = styled.textarea`
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: rgb(0, 4, 14);
-  color: white;
-  min-height: 100px;
-`;
-
 export const ButtonGroup = styled.div`
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   margin-top: 24px;
-
-  button {
-    min-width: 100px;
-  }
 `;
 
 export const Button = styled.button`
@@ -214,7 +130,6 @@ export const Button = styled.button`
   align-items: center;
   gap: 5px;
   font-weight: 500;
-  transition: all 0.3s ease;
   
   &.primary {
     background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
@@ -222,8 +137,6 @@ export const Button = styled.button`
     
     &:hover {
       background: linear-gradient(135deg, #1557b0 0%, #083378 100%);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(26, 115, 232, 0.3);
     }
   }
   
@@ -233,52 +146,6 @@ export const Button = styled.button`
     
     &:hover {
       background: linear-gradient(135deg, #bb2d3b 0%, #7c1616 100%);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
     }
   }
-
-  svg {
-    font-size: 14px;
-  }
-`;
-
-export const DetailsContainer = styled.div`
-  background-color: #1f2937;
-  padding: 24px;
-  border-radius: 12px;
-  width: 500px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-`;
-
-export const DetailsHeader = styled.h2`
-  color: #fff;
-  font-size: 24px;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #374151;
-`;
-
-export const DetailsRow = styled.div`
-  display: flex;
-  margin-bottom: 16px;
-  padding: 8px;
-  background-color: #111827;
-  border-radius: 6px;
-  
-  &:last-child {
-    margin-bottom: 24px;
-  }
-`;
-
-export const DetailsLabel = styled.span`
-  color:rgb(255, 255, 255);
-  font-weight: 600;
-  width: 120px;
-  flex-shrink: 0;
-`;
-
-export const DetailsValue = styled.span`
-  color: #fff;
-  flex: 1;
 `;
