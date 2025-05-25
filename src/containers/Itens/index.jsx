@@ -53,7 +53,8 @@ const Itens = () => {
     nome: '',
     descricao: '',
     quantidade: '',
-    preco: ''
+    preco: '',
+    quantidade_minima: '0' // Adicionar quantidade_minima
   });
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -109,7 +110,8 @@ const Itens = () => {
         nome: formData.nome,
         descricao: formData.descricao,
         quantidade: parseInt(formData.quantidade),
-        preco: formData.preco ? parseFloat(formData.preco) : null
+        preco: formData.preco ? parseFloat(formData.preco) : null,
+        quantidade_minima: parseInt(formData.quantidade_minima) // Adicionar quantidade_minima
       });
 
       toast.success('Item criado com sucesso!');
@@ -118,7 +120,8 @@ const Itens = () => {
         nome: '',
         descricao: '',
         quantidade: '',
-        preco: ''
+        preco: '',
+        quantidade_minima: '0' // Adicionar quantidade_minima
       });
       carregarItens(); // Recarrega a lista após criar
     } catch (error) {
@@ -132,7 +135,8 @@ const Itens = () => {
     setFormData({
       nome: item.nome,
       descricao: item.descricao,
-      preco: item.preco
+      preco: item.preco,
+      quantidade_minima: item.quantidade_minima // Adicionar quantidade_minima
     });
     setShowEditForm(true);
   };
@@ -154,7 +158,8 @@ const Itens = () => {
       await api.put(`/itens/${selectedItem.id}`, {
         nome: formData.nome,
         descricao: formData.descricao,
-        preco: formData.preco ? parseFloat(formData.preco) : null
+        preco: formData.preco ? parseFloat(formData.preco) : null,
+        quantidade_minima: parseInt(formData.quantidade_minima) // Adicionar quantidade_minima
       });
 
       toast.success('Item atualizado com sucesso!');
@@ -164,7 +169,8 @@ const Itens = () => {
         nome: '',
         descricao: '',
         quantidade: '',
-        preco: ''
+        preco: '',
+        quantidade_minima: '0' // Adicionar quantidade_minima
       });
       carregarItens();
     } catch (error) {
@@ -255,6 +261,17 @@ const Itens = () => {
                   />
                 </FormGroup>
 
+                <FormGroup>
+                  <Label>Quantidade Mínima *</Label>
+                  <Input
+                    type="number"
+                    name="quantidade_minima"
+                    value={formData.quantidade_minima}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </FormGroup>
+
                 <ButtonGroup>
                   <Button
                     type="button"
@@ -305,6 +322,17 @@ const Itens = () => {
                   />
                 </FormGroup>
 
+                <FormGroup>
+                  <Label>Quantidade Mínima *</Label>
+                  <Input
+                    type="number"
+                    name="quantidade_minima"
+                    value={formData.quantidade_minima}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </FormGroup>
+
                 <ButtonGroup>
                   <Button
                     type="button"
@@ -345,6 +373,11 @@ const Itens = () => {
                 </DetailsRow>
                 
                 <DetailsRow>
+                  <DetailsLabel>Qtd. Mínima:</DetailsLabel>
+                  <DetailsValue>{selectedItem.quantidade_minima}</DetailsValue>
+                </DetailsRow>
+
+                <DetailsRow>
                   <DetailsLabel>Preço:</DetailsLabel>
                   <DetailsValue>{formatarMoeda(selectedItem.preco)}</DetailsValue>
                 </DetailsRow>
@@ -368,6 +401,7 @@ const Itens = () => {
                 <tr>
                   <Th>Nome</Th>
                   <Th>Quantidade</Th>
+                  <Th>Qtd. Mínima</Th>
                   <Th>Preço</Th>
                   <Th>Ações</Th>
                 </tr>
@@ -390,6 +424,7 @@ const Itens = () => {
                     <tr key={item.id}>
                       <Td>{item.nome}</Td>
                       <Td>{item.quantidade}</Td>
+                      <Td>{item.quantidade_minima}</Td>
                       <Td>{formatarMoeda(item.preco)}</Td>
                       <Td>
                         <Button

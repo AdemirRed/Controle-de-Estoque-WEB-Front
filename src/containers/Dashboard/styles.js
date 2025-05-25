@@ -41,16 +41,21 @@ export const UserInfo = styled.div`
 `;
 
 export const LogoutButton = styled.button`
-  background: transparent;
+  background: linear-gradient(135deg, #ff4b4b 0%, #c91407 100%);
   border: none;
-  color:rgb(201, 20, 7);
+  color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 5px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
   
   &:hover {
-    opacity: 0.8;
+    background: linear-gradient(135deg, #ff3333 0%, #a31206 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(201, 20, 7, 0.3);
   }
 `;
 

@@ -79,7 +79,7 @@ export const Td = styled.td`
 `;
 
 export const AddButton = styled.button`
-  background-color: #1a73e8;
+  background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
   color: white;
   padding: 10px 20px;
   border: none;
@@ -91,10 +91,12 @@ export const AddButton = styled.button`
   gap: 8px;
   font-weight: 500;
   font-size: 14px;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
   
   &:hover {
-    background-color: #1557b0;
+    background: linear-gradient(135deg, #1557b0 0%, #083378 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(26, 115, 232, 0.3);
   }
 
   svg {
@@ -182,20 +184,24 @@ export const Button = styled.button`
   transition: all 0.3s ease;
   
   &.primary {
-    background-color: #1a73e8;
+    background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
     color: white;
     
     &:hover {
-      background-color: #1557b0;
+      background: linear-gradient(135deg, #1557b0 0%, #083378 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(26, 115, 232, 0.3);
     }
   }
   
   &.secondary {
-    background-color: #dc3545;
+    background: linear-gradient(135deg, #dc3545 0%, #981b1b 100%);
     color: white;
     
     &:hover {
-      background-color: #bb2d3b;
+      background: linear-gradient(135deg, #bb2d3b 0%, #7c1616 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
     }
   }
 

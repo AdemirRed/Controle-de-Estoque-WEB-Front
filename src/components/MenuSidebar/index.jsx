@@ -2,7 +2,6 @@ import React from 'react';
 import {
   FaBox,
   FaClipboardList,
-  FaExchangeAlt,
   FaFileAlt,
   FaHandshake,
   FaHome,
@@ -11,9 +10,9 @@ import {
   FaUsers,
   FaWarehouse
 } from 'react-icons/fa';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Sidebar, MenuItem, Logo } from './styles';
+import { Logo, MenuItem, Sidebar } from './styles';
 
 const MenuSidebar = () => {
   const navigate = useNavigate();
@@ -47,18 +46,16 @@ const MenuSidebar = () => {
         Pedidos
       </MenuItem>
       
-      <MenuItem>
-        <FaExchangeAlt size={20} />
-        Movimentações
-      </MenuItem>
-
       {user?.papel === 'admin' && (
         <>
           <MenuItem>
             <FaHandshake size={20} />
             Fornecedores
           </MenuItem>
-          <MenuItem>
+          <MenuItem
+            className={isActive('/movimentacoes-estoque') ? 'active' : ''}
+            onClick={() => navigate('/movimentacoes-estoque')}
+          >
             <FaWarehouse size={20} />
             Movimentação de Estoque
           </MenuItem>
