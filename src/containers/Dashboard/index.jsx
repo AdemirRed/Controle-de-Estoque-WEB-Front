@@ -17,7 +17,8 @@ import {
     FaExclamationTriangle,
     FaShoppingCart,
     FaSignOutAlt,
-    FaUser
+    FaUser,
+    FaBars
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -63,17 +64,36 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [chartData, setChartData] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
+
+  // Fecha o menu lateral ao navegar em telas pequenas
+  const handleSidebarNavigate = () => {
+    if (window.innerWidth <= 900) {
+      setSidebarOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setSidebarOpen(window.innerWidth > 900);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [itensResponse, movimentacoesResponse] = await Promise.all([
+        const [itensResponse, movimentacoesResponse, pedidosPendentesResponse] = await Promise.all([
           api.get('/itens'),
-          api.get('/movimentacoes-estoque')
+          api.get('/movimentacoes-estoque'),
+          api.get('/pedidos?status=pendente')
         ]);
         
         const itens = itensResponse.data;
         const movimentacoes = movimentacoesResponse.data;
+        // pedidosPendentesResponse.data.total é o número correto de pedidos pendentes
+        const pedidosPendentesTotal = pedidosPendentesResponse.data.total;
         
         const valorTotal = itens.reduce((total, item) => {
           return total + (item.preco || 0) * (item.quantidade || 0);
@@ -102,7 +122,7 @@ const Dashboard = () => {
 
         setDashboardData({
           totalProdutos: itens.length,
-          pedidosPendentes: 0,
+          pedidosPendentes: pedidosPendentesTotal,
           movimentacoes: ultimas24h.length,
           valorTotal: valorTotal,
           estoqueBaixo: estoqueBaixo
@@ -182,7 +202,88 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      <MenuSidebar />
+      {/* Botão de abrir menu lateral fixo em telas pequenas */}
+      {!sidebarOpen && (
+        <button
+          style={{
+            position: 'fixed',
+            top: 16,
+            left: 16,
+            zIndex: 3000,
+            background: '#132040',
+            border: 'none',
+            borderRadius: '50%',
+            width: 48,
+            height: 48,
+            color: '#00f2fa',
+            fontSize: 28,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px #0008',
+            cursor: 'pointer'
+          }}
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Abrir menu"
+        >
+          <FaBars />
+        </button>
+      )}
+      {/* Sidebar responsivo */}
+      {sidebarOpen && (
+        <>
+          {/* Overlay para fechar menu ao clicar fora em telas pequenas */}
+          {window.innerWidth <= 900 && (
+            <div
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0,0,0,0.35)',
+                zIndex: 199
+              }}
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+          <div
+            style={{
+              minWidth: 250,
+              maxWidth: 300,
+              width: '100%',
+              transition: 'all 0.3s',
+              zIndex: 200,
+              background: '#132040',
+              position: window.innerWidth <= 900 ? 'fixed' : 'relative',
+              top: window.innerWidth <= 900 ? 0 : undefined,
+              left: window.innerWidth <= 900 ? 0 : undefined,
+              height: window.innerWidth <= 900 ? '100vh' : undefined,
+              boxShadow: window.innerWidth <= 900 ? '2px 0 16px #0008' : undefined
+            }}
+          >
+            {/* Botão de fechar menu lateral só em telas pequenas */}
+            <button
+              style={{
+                position: 'absolute',
+                top: 12,
+                right: 12,
+                background: 'none',
+                border: 'none',
+                color: '#00f2fa',
+                fontSize: 28,
+                display: window.innerWidth <= 900 ? 'flex' : 'none',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                zIndex: 3001
+              }}
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Fechar menu"
+            >
+              <FaBars style={{ transform: 'rotate(45deg)' }} />
+            </button>
+            <MenuSidebar onNavigate={handleSidebarNavigate} />
+          </div>
+        </>
+      )}
       <MainContent>
         <HeaderComponent 
           title="Dashboard"
@@ -191,7 +292,11 @@ const Dashboard = () => {
         />
         <div style={{ padding: '20px' }}>
           <DashboardGrid>
-            <Card>
+            <Card
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/itens')}
+              title="Ver produtos"
+            >
               <CardHeader>
                 <CardTitle>Total de Produtos</CardTitle>
                 <FaBox size={24} color="#1a237e" />
@@ -204,18 +309,28 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/pedidos?status=pendente')}
+              title="Ver pedidos pendentes"
+            >
               <CardHeader>
                 <CardTitle>Pedidos Pendentes</CardTitle>
                 <FaShoppingCart size={24} color="#f57c00" />
               </CardHeader>
-              <CardValue>{dashboardData.pedidosPendentes}</CardValue>
+              <CardValue>
+                {loading ? 'Carregando...' : dashboardData.pedidosPendentes}
+              </CardValue>
               <CardContent>
                 <p style={{ color: '#666' }}>Aguardando processamento</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/movimentacoes-estoque')}
+              title="Ver movimentações"
+            >
               <CardHeader>
                 <CardTitle>Movimentações</CardTitle>
                 <FaExchangeAlt size={24} color="#388e3c" />
@@ -226,7 +341,11 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/itens')}
+              title="Ver valor em estoque"
+            >
               <CardHeader>
                 <CardTitle>Valor em Estoque</CardTitle>
                 <FaChartLine size={24} color="#c2185b" />
@@ -239,7 +358,11 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/itens?filtro=baixo')}
+              title="Ver itens com estoque baixo"
+            >
               <CardHeader>
                 <CardTitle>Estoque Baixo</CardTitle>
                 <FaExclamationTriangle size={24} color="#ff9800" />

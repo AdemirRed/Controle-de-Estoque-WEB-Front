@@ -26,6 +26,7 @@ import { LocalizationProvider, DateRangePicker, PickersDay } from '@mui/x-date-p
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import ptBR from 'date-fns/locale/pt-BR';
 import FiltrosPadrao from '../../components/FiltrosPadrao';
+import { useLocation } from 'react-router-dom';
 
 const Pedidos = () => {
   const [pedidos, setPedidos] = useState([]);
@@ -36,6 +37,7 @@ const Pedidos = () => {
   const { user, signOut } = useAuth();
   const [modo, setModo] = useState('criar');
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
+  const location = useLocation();
   
   // Estados para o formulário
   const [itens, setItens] = useState([]);
@@ -90,6 +92,21 @@ const Pedidos = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    // Fecha o menu lateral ao trocar de rota em telas pequenas
+    if (window.innerWidth <= 900) {
+      setSidebarOpen(false);
+    }
+    // eslint-disable-next-line
+  }, [location.pathname]);
+
+  // Fecha o menu lateral ao navegar em telas pequenas
+  const handleSidebarNavigate = () => {
+    if (window.innerWidth <= 900) {
+      setSidebarOpen(false);
+    }
+  };
 
   const carregarPedidos = async () => {
     try {
@@ -291,6 +308,9 @@ const Pedidos = () => {
     setBuscaPeriodo([inicio, fim]);
   };
 
+  // Função para detectar se é mobile
+  const isMobile = () => /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+
   return (
     <div style={{
       display: 'flex',
@@ -333,40 +353,58 @@ const Pedidos = () => {
         )}
         {/* Sidebar responsivo */}
         {sidebarOpen && (
-          <div
-            style={{
-              minWidth: 250,
-              maxWidth: 300,
-              width: '100%',
-              transition: 'all 0.3s',
-              zIndex: 200,
-              background: '#132040',
-              position: 'relative'
-            }}
-          >
-            {/* Botão de fechar menu lateral só em telas pequenas */}
-            <button
+          <>
+            {/* Overlay para fechar menu ao clicar fora em telas pequenas */}
+            {window.innerWidth <= 900 && (
+              <div
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  background: 'rgba(0,0,0,0.35)',
+                  zIndex: 199
+                }}
+                onClick={() => setSidebarOpen(false)}
+              />
+            )}
+            <div
               style={{
-                position: 'absolute',
-                top: 12,
-                right: 12,
-                background: 'none',
-                border: 'none',
-                color: '#00f2fa',
-                fontSize: 28,
-                display: window.innerWidth <= 900 ? 'flex' : 'none',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                zIndex: 3001
+                minWidth: 250,
+                maxWidth: 300,
+                width: '100%',
+                transition: 'all 0.3s',
+                zIndex: 200,
+                background: '#132040',
+                position: window.innerWidth <= 900 ? 'fixed' : 'relative',
+                top: window.innerWidth <= 900 ? 0 : undefined,
+                left: window.innerWidth <= 900 ? 0 : undefined,
+                height: window.innerWidth <= 900 ? '100vh' : undefined,
+                boxShadow: window.innerWidth <= 900 ? '2px 0 16px #0008' : undefined
               }}
-              onClick={() => setSidebarOpen(false)}
-              aria-label="Fechar menu"
             >
-              <FaTimes />
-            </button>
-            <MenuSidebar />
-          </div>
+              {/* Botão de fechar menu lateral só em telas pequenas */}
+              <button
+                style={{
+                  position: 'absolute',
+                  top: 12,
+                  right: 12,
+                  background: 'none',
+                  border: 'none',
+                  color: '#00f2fa',
+                  fontSize: 28,
+                  display: window.innerWidth <= 900 ? 'flex' : 'none',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  zIndex: 3001
+                }}
+                onClick={() => setSidebarOpen(false)}
+                aria-label="Fechar menu"
+              >
+                <FaTimes />
+              </button>
+              <MenuSidebar onNavigate={handleSidebarNavigate} />
+            </div>
+          </>
         )}
         {/* Header ao lado do menu */}
         <div style={{
@@ -554,7 +592,10 @@ Equipe ⚪ OnnMoveis 🔵
 
 > Feito por _RedBlack_
 `;
-                                const link = `https://web.whatsapp.com/send?phone=${telefoneWhatsapp}&text=${encodeURIComponent(mensagem)}`;
+                                // Detecta se é mobile ou desktop e monta o link correto
+                                const link = isMobile()
+                                  ? `https://api.whatsapp.com/send?phone=${telefoneWhatsapp}&text=${encodeURIComponent(mensagem)}`
+                                  : `https://web.whatsapp.com/send?phone=${telefoneWhatsapp}&text=${encodeURIComponent(mensagem)}`;
                                 window.open(link);
                               }}
                               sx={{ color: '#25D366' }}

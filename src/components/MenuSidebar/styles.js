@@ -14,17 +14,20 @@ export const Sidebar = styled.div`
   padding: 20px;
   box-shadow: 2px 0 8px #10131a33;
   transition: transform 0.3s cubic-bezier(.4,0,.2,1), opacity 0.2s;
-  z-index: 1200;
+  z-index: 200;
+  position: relative;
 
   @media (max-width: 900px) {
     width: 180px;
     padding: 10px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 200;
+    box-shadow: 2px 0 16px #0008;
   }
   @media (max-width: 600px) {
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 100vh;
     transform: ${({ $open }) => ($open ? 'translateX(0)' : 'translateX(-110%)')};
     opacity: ${({ $open }) => ($open ? 1 : 0)};
     display: block;
