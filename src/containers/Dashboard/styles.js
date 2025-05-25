@@ -133,9 +133,17 @@ export const CardContent = styled.div`
 
 export const ChartSection = styled.div`
   background-color: rgb(0, 4, 14);
-
   padding: 20px;
   border-radius: 10px;
   margin-top: 20px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  height: 400px; // Altura fixa para o container
+  display: flex;
+  flex-direction: column;
+
+  .chart-container {
+    flex: 1;
+    min-height: 0; // Importante para o flex funcionar corretamente
+    position: relative; // Para o gráfico se ajustar corretamente
+  }
 `;

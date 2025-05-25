@@ -1,4 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
 import {
     FaBox,
     FaChartLine,
@@ -28,6 +39,17 @@ import {
     UserInfo
 } from './styles';
 
+// Registrar os componentes do Chart.js
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -39,6 +61,7 @@ const Dashboard = () => {
     estoqueBaixo: 0
   });
   const [loading, setLoading] = useState(true);
+  const [chartData, setChartData] = useState(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -83,6 +106,52 @@ const Dashboard = () => {
           valorTotal: valorTotal,
           estoqueBaixo: estoqueBaixo
         });
+
+        // Processar dados para o gráfico
+        const hoje = new Date();
+        const ultimos7Dias = Array.from({ length: 7 }, (_, i) => {
+          const data = new Date(hoje);
+          data.setDate(data.getDate() - i);
+          return data;
+        }).reverse();
+
+        const dadosGrafico = ultimos7Dias.map(data => {
+          const movimentacoesDia = movimentacoesResponse.data.filter(mov => {
+            const movData = new Date(mov.created_at);
+            return movData.toDateString() === data.toDateString();
+          });
+
+          const entradas = movimentacoesDia.filter(mov => mov.tipo === 'entrada')
+            .reduce((total, mov) => total + Number(mov.quantidade), 0);
+          
+          const saidas = movimentacoesDia.filter(mov => mov.tipo === 'saida')
+            .reduce((total, mov) => total + Number(mov.quantidade), 0);
+
+          return {
+            data: data.toLocaleDateString('pt-BR'),
+            entradas,
+            saidas
+          };
+        });
+
+        setChartData({
+          labels: dadosGrafico.map(d => d.data),
+          datasets: [
+            {
+              label: 'Entradas',
+              data: dadosGrafico.map(d => d.entradas),
+              borderColor: 'rgb(75, 192, 192)',
+              tension: 0.1
+            },
+            {
+              label: 'Saídas',
+              data: dadosGrafico.map(d => d.saidas),
+              borderColor: 'rgb(255, 99, 132)',
+              tension: 0.1
+            }
+          ]
+        });
+
       } catch (error) {
         console.error('Erro ao carregar dados do dashboard:', error);
         toast.error('Erro ao carregar dados do dashboard');
@@ -190,19 +259,62 @@ const Dashboard = () => {
                 <p style={{ color: '#666' }}>Itens abaixo do mínimo</p>
               </CardContent>
             </Card>
-
           </DashboardGrid>
 
           <ChartSection>
             <h2 style={{ color: '#0015FF', marginBottom: '15px' }}>Histórico de Movimentações</h2>
-            <div style={{ 
-              height: '300px', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              color: '#666' 
-            }}>
-              Área reservada para gráfico de movimentações
+            <div className="chart-container">
+              {chartData ? (
+                <Line
+                  data={chartData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                      legend: {
+                        position: 'top',
+                        labels: {
+                          color: '#0015FF'
+                        }
+                      },
+                      title: {
+                        display: true,
+                        text: 'Movimentações dos Últimos 7 Dias',
+                        color: '#0015FF'
+                      }
+                    },
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                        grid: {
+                          color: 'rgba(0, 21, 255, 0.1)'
+                        },
+                        ticks: {
+                          color: '#0015FF'
+                        }
+                      },
+                      x: {
+                        grid: {
+                          color: 'rgba(0, 21, 255, 0.1)'
+                        },
+                        ticks: {
+                          color: '#0015FF'
+                        }
+                      }
+                    }
+                  }}
+                />
+              ) : (
+                <div style={{ 
+                  height: '100%',
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  color: '#0015FF' 
+                }}>
+                  Carregando gráfico...
+                </div>
+              )}
             </div>
           </ChartSection>
         </div>

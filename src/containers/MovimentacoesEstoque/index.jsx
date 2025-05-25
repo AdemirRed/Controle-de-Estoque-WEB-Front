@@ -1,20 +1,20 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from 'react';
-import { FaUser, FaSignOutAlt } from 'react-icons/fa';
+import { FaSignOutAlt, FaUser } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import MenuSidebar from '../../components/MenuSidebar';
 import { useAuth } from '../../context/AuthContext'; // Corrigido o caminho do import
 import api from '../../services/api';
-import MenuSidebar from '../../components/MenuSidebar';
-import { 
-  Container, 
-  FormContainer, 
-  ListContainer, 
-  Layout, 
-  MainContent,
-  Header,
-  UserInfo,
-  LogoutButton 
+import {
+    Container,
+    FormContainer,
+    Header,
+    Layout,
+    ListContainer,
+    LogoutButton,
+    MainContent,
+    UserInfo
 } from './styles';
 
 const MovimentacoesEstoque = () => {
@@ -206,7 +206,6 @@ const MovimentacoesEstoque = () => {
             <table>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Item</th>
                   <th>Quantidade</th>
                   <th>Tipo</th>
@@ -218,7 +217,6 @@ const MovimentacoesEstoque = () => {
               <tbody>
                 {movimentacoes.map((mov) => (
                   <tr key={mov.id}>
-                    <td>{mov.id}</td>
                     <td>{mov.item_nome}</td>
                     <td>{mov.quantidade}</td>
                     <td>{mov.tipo}</td>
