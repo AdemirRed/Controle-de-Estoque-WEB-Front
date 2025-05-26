@@ -66,8 +66,12 @@ function Usuarios() {
   const loadUsuarios = async () => {
     try {
       const response = await api.get('/usuarios');
-      // Não precisa mais fazer requisições individuais pois a rota já retorna todos os dados
-      setUsuarios(response.data);
+      // Garante que todos os usuários tenham o campo papel preenchido
+      const usuariosComPapel = response.data.map(u => ({
+        ...u,
+        papel: u.papel || 'usuario'
+      }));
+      setUsuarios(usuariosComPapel);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
       toast.error('Erro ao carregar lista de usuários');
@@ -148,7 +152,11 @@ function Usuarios() {
         loadUsuarios();
       } catch (error) {
         console.error('Erro ao excluir usuário:', error);
-        toast.error(error.response?.data?.message || 'Erro ao excluir usuário');
+        if (error.response?.status === 404) {
+          toast.error('Usuário não encontrado ou já foi removido.');
+        } else {
+          toast.error(error.response?.data?.message || 'Erro ao excluir usuário');
+        }
       }
     }
   };
@@ -164,8 +172,11 @@ function Usuarios() {
   };
 
   const formatarPapel = (papel) => {
-    console.log('Formatando papel:', papel);
-    return papel === 'admin' ? 'Administrador' : 'Usuário';
+    // Remove o log ou deixe apenas para debug
+    // console.log('Formatando papel:', papel);
+    if (!papel || papel === 'usuario') return 'Usuário';
+    if (papel === 'admin') return 'Administrador';
+    return papel;
   };
 
   const formatarData = (data) => {

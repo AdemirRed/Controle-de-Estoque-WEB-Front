@@ -125,6 +125,23 @@ const Login = () => {
           >
             Criar uma conta
           </Button>
+          <div style={{ textAlign: 'center', marginTop: 10 }}>
+            <button
+              type="button"
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#4a90e2',
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                fontSize: 14,
+                padding: 0
+              }}
+              onClick={() => navigate('/forgot-password')}
+            >
+              Esqueci minha senha?
+            </button>
+          </div>
         </Form>
       </LoginBox>
     </Container>

@@ -9,6 +9,7 @@ import Pedidos from '../containers/Pedidos';
 import Register from '../containers/Register';
 import UnidadesMedida from '../containers/UnidadesMedida';
 import Usuarios from '../containers/Usuarios';
+import { ForgotPassword } from '../containers/ForgotPassword'; // Adicionado
 
 export const router = createBrowserRouter([
   {
@@ -54,5 +55,9 @@ export const router = createBrowserRouter([
   {
     path: '/register',
     element: <Register />,
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPassword />,
   }
 ]);
