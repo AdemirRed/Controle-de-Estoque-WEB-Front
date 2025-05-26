@@ -57,9 +57,15 @@ const Login = () => {
         localStorage.removeItem('rememberMe');
       }
       toast.success('Redirecionando para o Dashboard...');
-      navigate('/dashboard');
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1200); // 1.2 segundos de delay
     } catch (err) {
-      setError(err.message || 'Falha na autenticação. Verifique suas credenciais.');
+      if (err?.response?.status === 401) {
+        setError('Usuário ou senha incorretos!');
+      } else {
+        setError(err.message || 'Falha na autenticação. Verifique suas credenciais.');
+      }
     }
   };
 

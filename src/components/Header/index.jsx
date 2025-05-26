@@ -1,5 +1,5 @@
 import { Button } from '@mui/material';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaBell, FaSignOutAlt, FaUser } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { Header, LogoutButton, NotificationBadge, NotificationPanel, UserInfo } from './styles';
@@ -34,11 +34,11 @@ const HeaderComponent = ({ title, user, onLogout }) => {
         Notification.requestPermission().then(permission => {
           console.log('Permissão de notificação após solicitação:', permission);
           if (permission === 'denied') {
-            toast.info('As notificações estão bloqueadas. Para ativar, libere manualmente nas configurações do navegador para este site.');
+           // toast.info('As notificações estão bloqueadas. Para ativar, libere manualmente nas configurações do navegador para este site.');
           }
         });
       } else if (Notification.permission === 'denied') {
-        toast.info('As notificações estão bloqueadas. Para ativar, libere manualmente nas configurações do navegador para este site.');
+        //toast.info('As notificações estão bloqueadas. Para ativar, libere manualmente nas configurações do navegador para este site.');
       }
     }
   }, []);
