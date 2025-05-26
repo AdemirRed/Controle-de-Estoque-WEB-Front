@@ -82,6 +82,23 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Método para criar uma conta
+  const signUp = async ({ nome, email, password, papel }) => {
+    try {
+      const response = await api.post('/usuarios', {
+        nome,
+        email,
+        senha_hash: password,
+        papel
+      });
+      toast.success('Conta criada com sucesso!');
+      return response.data;
+    } catch (error) {
+      toast.error(error.response?.data?.erro || 'Erro ao criar conta');
+      throw error;
+    }
+  };
+
   const signOut = () => {
     localStorage.removeItem('@App:token');
     localStorage.removeItem('@App:user');
@@ -214,6 +231,7 @@ export const AuthProvider = ({ children }) => {
         user, 
         signIn, 
         signOut,
+        signUp, // Adiciona signUp ao contexto
         loading: false 
       }}
     >

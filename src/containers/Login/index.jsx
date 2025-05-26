@@ -112,6 +112,13 @@ const Login = () => {
           </RememberMeContainer>
           {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
           <Button type="submit">Entrar</Button>
+          <Button
+            type="button"
+            style={{ background: 'transparent', color: '#4a90e2', marginTop: 10 }}
+            onClick={() => navigate('/register')}
+          >
+            Criar uma conta
+          </Button>
         </Form>
       </LoginBox>
     </Container>

@@ -21,9 +21,24 @@ function Fornecedores() {
     email: ''
   });
 
+  // Adicione o controle do menu lateral responsivo
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
+
   useEffect(() => {
     loadFornecedores();
   }, []);
+
+  useEffect(() => {
+    // Fecha o menu lateral ao trocar de rota em telas pequenas
+    const handleResize = () => setSidebarOpen(window.innerWidth > 900);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Fecha o menu lateral ao navegar em telas pequenas
+  const handleSidebarNavigate = () => {
+    if (window.innerWidth <= 900) setSidebarOpen(false);
+  };
 
   const loadFornecedores = async () => {
     try {
@@ -149,7 +164,89 @@ function Fornecedores() {
 
   return (
     <Container>
-      <MenuSidebar />
+      {/* Botão de abrir menu lateral fixo em telas pequenas */}
+      {!sidebarOpen && (
+        <button
+          style={{
+            position: 'fixed',
+            top: 16,
+            left: 16,
+            zIndex: 3000,
+            background: '#132040',
+            border: 'none',
+            borderRadius: '50%',
+            width: 48,
+            height: 48,
+            color: '#00f2fa',
+            fontSize: 28,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px #0008',
+            cursor: 'pointer'
+          }}
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Abrir menu"
+        >
+          {/* Ícone de menu */}
+          <span style={{ fontSize: 24 }}>☰</span>
+        </button>
+      )}
+      {/* Sidebar responsivo */}
+      {sidebarOpen && (
+        <>
+          {/* Overlay para fechar menu ao clicar fora em telas pequenas */}
+          {window.innerWidth <= 900 && (
+            <div
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0,0,0,0.35)',
+                zIndex: 199
+              }}
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+          <div
+            style={{
+              minWidth: 250,
+              maxWidth: 300,
+              width: '100%',
+              transition: 'all 0.3s',
+              zIndex: 200,
+              background: '#132040',
+              position: window.innerWidth <= 900 ? 'fixed' : 'relative',
+              top: window.innerWidth <= 900 ? 0 : undefined,
+              left: window.innerWidth <= 900 ? 0 : undefined,
+              height: window.innerWidth <= 900 ? '100vh' : undefined,
+              boxShadow: window.innerWidth <= 900 ? '2px 0 16px #0008' : undefined
+            }}
+          >
+            {/* Botão de fechar menu lateral só em telas pequenas */}
+            <button
+              style={{
+                position: 'absolute',
+                top: 12,
+                right: 12,
+                background: 'none',
+                border: 'none',
+                color: '#00f2fa',
+                fontSize: 28,
+                display: window.innerWidth <= 900 ? 'flex' : 'none',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                zIndex: 3001
+              }}
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Fechar menu"
+            >
+              ×
+            </button>
+            <MenuSidebar onNavigate={handleSidebarNavigate} />
+          </div>
+        </>
+      )}
       <Content>
         <HeaderComponent 
           title="Fornecedores"

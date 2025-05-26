@@ -29,7 +29,13 @@ const statusLabels = {
 
 function showBrowserNotification(title, body) {
   if ('Notification' in window && Notification.permission === 'granted') {
-    new Notification(title, { body });
+    try {
+      // Alguns navegadores não permitem o uso direto do construtor Notification
+      new window.Notification(title, { body });
+    } catch (err) {
+      // Fallback: apenas exibe um toast
+      toast.info(`${title} - ${body}`);
+    }
   }
 }
 

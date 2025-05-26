@@ -13,19 +13,19 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://192.168.0.200:2001',
+        target: 'https://redblackspy.ddns.net:2001',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
       '/auth': {
-        target: 'https://192.168.0.200:2001',
+        target: 'https://redblackspy.ddns.net:2001',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/auth/, ''),
       },
       '/socket': {
-        target: 'ws://192.168.0.200:2010',
+        target: 'ws://redblackspy.ddns.net:2010',
         ws: true,
         changeOrigin: true,
         rewrite: path => path.replace(/^\/socket/, '/ws'),

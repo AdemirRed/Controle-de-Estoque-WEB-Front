@@ -6,6 +6,7 @@ import Itens from '../containers/Itens';
 import Login from '../containers/Login';
 import MovimentacoesEstoque from '../containers/MovimentacoesEstoque';
 import Pedidos from '../containers/Pedidos';
+import Register from '../containers/Register';
 import UnidadesMedida from '../containers/UnidadesMedida';
 import Usuarios from '../containers/Usuarios';
 
@@ -49,5 +50,9 @@ export const router = createBrowserRouter([
   {
     path: '/item-requests',
     element: <ItemRequests />,
+  },
+  {
+    path: '/register',
+    element: <Register />,
   }
 ]);

@@ -26,8 +26,19 @@ import {
 } from './styles';
 
 function showBrowserNotification(title, body) {
-  if ('Notification' in window && Notification.permission === 'granted') {
-    new Notification(title, { body });
+  // Corrigido: só chama se window.Notification existir e for permitido
+  if (
+    typeof window !== 'undefined' &&
+    'Notification' in window &&
+    typeof window.Notification === 'function' &&
+    window.Notification.permission === 'granted'
+  ) {
+    try {
+      new window.Notification(title, { body });
+    } catch (e) {
+      // Silencie erros de construtor ilegal
+      // (ex: ServiceWorker context)
+    }
   }
 }
 
