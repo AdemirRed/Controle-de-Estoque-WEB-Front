@@ -1,7 +1,7 @@
 import { Mail } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import {
   Container,
   FeedbackMessage,
@@ -38,7 +38,9 @@ export function ForgotPassword() {
         try {
           const data = await response.json();
           errorMsg = data?.erro || data?.message || errorMsg;
-        } catch {}
+        } catch {
+          // Intentionally ignored
+        }
         toast.error(errorMsg + ` (código: ${response.status})`);
         setLoading(false);
         return;
