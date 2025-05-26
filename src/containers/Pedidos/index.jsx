@@ -8,6 +8,8 @@ import {
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { FaBars, FaEdit, FaEye, FaTimes, FaWhatsapp, FaWindowClose } from 'react-icons/fa';
+import { useLocation } from 'react-router-dom';
+import FiltrosPadrao from '../../components/FiltrosPadrao';
 import Header from '../../components/Header';
 import MenuSidebar from '../../components/MenuSidebar';
 import { useAuth } from '../../context/AuthContext';
@@ -22,11 +24,36 @@ import {
   FormContainer,
   FormWrapper
 } from './styles';
-import { LocalizationProvider, DateRangePicker, PickersDay } from '@mui/x-date-pickers-pro';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import ptBR from 'date-fns/locale/pt-BR';
-import FiltrosPadrao from '../../components/FiltrosPadrao';
-import { useLocation } from 'react-router-dom';
+
+function showBrowserNotification(title, body) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, { body });
+  }
+}
+
+// Função global para buscar pedidos pendentes e notificar
+function startPedidosPolling(PedidoService, user) {
+  let lastPendingCount = 0;
+  setInterval(async () => {
+    try {
+      if (!user || user.papel !== 'admin') return;
+      const response = await PedidoService.listarPedidos();
+      const pedidos = response.data || [];
+      const pendentes = pedidos.filter(p => p.status === 'pendente');
+      if (pendentes.length > lastPendingCount) {
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification(
+            'Novo pedido pendente!',
+            { body: `Você tem ${pendentes.length} pedido(s) pendente(s) para aprovar.` }
+          );
+        }
+      }
+      lastPendingCount = pendentes.length;
+    } catch (error) {
+      // Silencie erros de polling
+    }
+  }, 180000); // 3 minutos
+}
 
 const Pedidos = () => {
   const [pedidos, setPedidos] = useState([]);
@@ -38,6 +65,7 @@ const Pedidos = () => {
   const [modo, setModo] = useState('criar');
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
   const location = useLocation();
+  const [lastPendingCount, setLastPendingCount] = useState(0);
   
   // Estados para o formulário
   const [itens, setItens] = useState([]);
@@ -98,8 +126,31 @@ const Pedidos = () => {
     if (window.innerWidth <= 900) {
       setSidebarOpen(false);
     }
-    // eslint-disable-next-line
+     
   }, [location.pathname]);
+
+  useEffect(() => {
+    // Sempre que pedidos mudar, verifica se há novos pendentes (apenas admin)
+    if (user?.papel === 'admin') {
+      const pendentes = pedidos.filter(p => p.status === 'pendente');
+      if (pendentes.length > lastPendingCount) {
+        showBrowserNotification(
+          'Novo pedido pendente!',
+          `Você tem ${pendentes.length} pedido(s) pendente(s) para aprovar.`
+        );
+      }
+      setLastPendingCount(pendentes.length);
+    }
+  }, [pedidos, user]); // Inclua user na dependência
+
+  useEffect(() => {
+    // Inicia o polling global apenas uma vez e só para admin
+    if (user?.papel === 'admin' && window.__pedidosPollingStarted !== true) {
+      window.__pedidosPollingStarted = true;
+      startPedidosPolling(PedidoService, user);
+    }
+     
+  }, [user]);
 
   // Fecha o menu lateral ao navegar em telas pequenas
   const handleSidebarNavigate = () => {
@@ -310,6 +361,21 @@ const Pedidos = () => {
 
   // Função para detectar se é mobile
   const isMobile = () => /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+
+  // Adicione o estado para controlar o pedido a ser excluído
+  const [pedidoParaExcluir, setPedidoParaExcluir] = useState(null);
+
+  // Função para excluir pedido
+  const handleDeletePedido = async (pedidoId) => {
+    if (!window.confirm('Tem certeza que deseja excluir este pedido?')) return;
+    try {
+      await PedidoService.excluirPedido(pedidoId);
+      showNotification('Pedido excluído com sucesso!');
+      carregarPedidos();
+    } catch (error) {
+      showNotification(error.response?.data?.error || 'Erro ao excluir pedido', 'error');
+    }
+  };
 
   return (
     <div style={{
@@ -601,6 +667,16 @@ Equipe ⚪ OnnMoveis 🔵
                               sx={{ color: '#25D366' }}
                             >
                               <FaWhatsapp />
+                            </IconButton>
+                          )}
+                          {/* Botão de excluir para admin */}
+                          {user?.papel === 'admin' && (
+                            <IconButton
+                              onClick={() => handleDeletePedido(pedido.id)}
+                              sx={{ color: '#f44336' }}
+                              title="Excluir pedido"
+                            >
+                              <FaTimes />
                             </IconButton>
                           )}
                         </TableCell>

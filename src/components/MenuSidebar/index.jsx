@@ -7,17 +7,17 @@ import {
   FaHome,
   FaRuler,
   FaUsers,
-  FaWarehouse
+  FaWarehouse,
+  FaPlusCircle
 } from 'react-icons/fa';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Logo, MenuItem, Sidebar } from './styles';
 
-// Removido o estado open e o MobileMenuButton
 const MenuSidebar = ({ onNavigate }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   const isActive = (path) => location.pathname === path;
 
@@ -25,6 +25,14 @@ const MenuSidebar = ({ onNavigate }) => {
   const handleNavigate = (path) => {
     navigate(path);
     if (onNavigate) onNavigate();
+  };
+
+  // Função de logout
+  const handleLogout = () => {
+    localStorage.removeItem('email');
+    localStorage.removeItem('rememberMe');
+    if (signOut) signOut();
+    navigate('/login');
   };
 
   return (
@@ -50,6 +58,13 @@ const MenuSidebar = ({ onNavigate }) => {
       >
         <FaClipboardList size={20} />
         Pedidos
+      </MenuItem>
+      <MenuItem
+        className={isActive('/item-requests') ? 'active' : ''}
+        onClick={() => handleNavigate('/item-requests')}
+      >
+        <FaPlusCircle size={20} />
+        Requisições de Itens
       </MenuItem>
       {user?.papel === 'admin' && (
         <>
@@ -87,6 +102,11 @@ const MenuSidebar = ({ onNavigate }) => {
           </MenuItem>
         </>
       )}
+      {/* Botão de sair */}
+      <MenuItem onClick={handleLogout}>
+        <FaHome size={20} style={{ opacity: 0 }} />
+        Sair
+      </MenuItem>
     </Sidebar>
   );
 };

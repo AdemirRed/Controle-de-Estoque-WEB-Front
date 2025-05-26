@@ -1,18 +1,15 @@
- 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import {
-    Button,
-    Container,
-    Form,
-    Input,
-    LoginBox,
-    RememberMeContainer // Adicionar este import
-    ,
-
-    Title
+  Button,
+  Container,
+  Form,
+  Input,
+  LoginBox,
+  RememberMeContainer,
+  Title
 } from './styles';
 
 const Login = () => {
@@ -25,11 +22,18 @@ const Login = () => {
   });
   const [error, setError] = useState('');
 
+  // Redireciona para o dashboard se já estiver logado
+  useEffect(() => {
+    if (auth.user) {
+      navigate('/dashboard');
+    }
+  }, [auth.user, navigate]);
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setCredentials(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
@@ -44,6 +48,14 @@ const Login = () => {
 
     try {
       await auth.signIn(credentials);
+      // Salva ou remove email e rememberMe do localStorage
+      if (credentials.rememberMe) {
+        localStorage.setItem('email', credentials.email);
+        localStorage.setItem('rememberMe', 'true');
+      } else {
+        localStorage.removeItem('email');
+        localStorage.removeItem('rememberMe');
+      }
       toast.success('Redirecionando para o Dashboard...');
       navigate('/dashboard');
     } catch (err) {
@@ -55,19 +67,19 @@ const Login = () => {
     <Container>
       <LoginBox>
         <Title>OnnMoveis</Title>
-        <h2 style={{ 
-          textAlign: 'center', 
-          color: '#4a90e2', 
+        <h2 style={{
+          textAlign: 'center',
+          color: '#4a90e2',
           fontSize: '18px',
-          marginBottom: '10px' 
+          marginBottom: '10px'
         }}>
           Sistema de Controle de Estoque
         </h2>
-        <p style={{ 
-          textAlign: 'center', 
-          color: '#888', 
+        <p style={{
+          textAlign: 'center',
+          color: '#888',
           fontSize: '14px',
-          marginBottom: '20px' 
+          marginBottom: '20px'
         }}>
           Faça login para acessar o sistema
         </p>
@@ -94,12 +106,7 @@ const Login = () => {
               id="rememberMe"
               name="rememberMe"
               checked={credentials.rememberMe}
-              onChange={(e) => handleChange({
-                target: {
-                  name: 'rememberMe',
-                  value: e.target.checked
-                }
-              })}
+              onChange={handleChange}
             />
             <label htmlFor="rememberMe">Lembrar-me</label>
           </RememberMeContainer>
