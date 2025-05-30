@@ -56,7 +56,7 @@ export function ForgotPassword() {
     setResendTimeLeft(resendDelay);
     setCanResend(false);
     if (resendTimerRef.current) clearTimeout(resendTimerRef.current);
-    if (resendCount < 5) {
+    if (resendCount < 3) { // alterado de 5 para 3
       resendTimerRef.current = setInterval(() => {
         setResendTimeLeft(prev => {
           if (prev <= 1) {
@@ -116,7 +116,7 @@ export function ForgotPassword() {
   };
 
   const handleResendCode = async () => {
-    if (!canResend || resendCount >= 5) return;
+    if (!canResend || resendCount >= 3) return; // alterado de 5 para 3
     setLoading(true);
     try {
       const response = await fetch('/api/esqueci-senha', {
@@ -344,13 +344,13 @@ export function ForgotPassword() {
             <button
               type="button"
               onClick={handleResendCode}
-              disabled={!canResend || loading || resendCount >= 5}
+              disabled={!canResend || loading || resendCount >= 3} // alterado de 5 para 3
               style={{
                 background: 'none',
                 border: 'none',
-                color: canResend && !loading && resendCount < 5 ? '#00eaff' : '#888',
+                color: canResend && !loading && resendCount < 3 ? '#00eaff' : '#888', // alterado de 5 para 3
                 textDecoration: 'underline',
-                cursor: canResend && !loading && resendCount < 5 ? 'pointer' : 'not-allowed',
+                cursor: canResend && !loading && resendCount < 3 ? 'pointer' : 'not-allowed', // alterado de 5 para 3
                 fontWeight: 600,
                 fontSize: 14,
                 marginLeft: 4
@@ -358,12 +358,12 @@ export function ForgotPassword() {
             >
               Enviar novamente
             </button>
-            {!canResend && resendCount < 5 && (
+            {!canResend && resendCount < 3 && ( // alterado de 5 para 3
               <span style={{ marginLeft: 8, color: '#ff9800', fontSize: 13 }}>
                 {`Aguarde ${resendTimeLeft}s`}
               </span>
             )}
-            {resendCount >= 5 && (
+            {resendCount >= 3 && ( // alterado de 5 para 3
               <span style={{ marginLeft: 8, color: '#ff4b4b', fontSize: 13 }}>
                 Limite de reenvios atingido
               </span>
