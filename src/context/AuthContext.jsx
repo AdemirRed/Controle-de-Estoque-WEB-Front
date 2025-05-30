@@ -6,7 +6,7 @@ const AuthContext = createContext({});
 
 // Configuração base do axios
 const api = axios.create({
-    baseURL: 'http://redblackspy.ddns.net:2001', // Usando o proxy configurado no vite.config.js
+    baseURL: '/auth', // Usando o proxy configurado no vite.config.js
   headers: {
     'Content-Type': 'application/json'
   }

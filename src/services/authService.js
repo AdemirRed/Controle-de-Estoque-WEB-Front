@@ -1,6 +1,9 @@
 export function login(dados) {
-  return fetch('https://redblackspy.ddns.net:2001/auth/sessao', {
+  return fetch('/auth/sessao', {
     method: 'POST',
-    // ...existing code...
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(dados)
   });
 }
