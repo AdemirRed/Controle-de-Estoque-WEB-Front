@@ -89,28 +89,21 @@ const Dashboard = () => {
           api.get('/movimentacoes-estoque'),
           api.get('/pedidos?status=pendente')
         ]);
-        
-        const itens = itensResponse.data;
-        const movimentacoes = movimentacoesResponse.data;
-        // pedidosPendentesResponse.data.total é o número correto de pedidos pendentes
-        const pedidosPendentesTotal = pedidosPendentesResponse.data.total;
-        
+
+        // Garante que os dados sejam arrays
+        const itens = Array.isArray(itensResponse.data) ? itensResponse.data : [];
+        const movimentacoes = Array.isArray(movimentacoesResponse.data) ? movimentacoesResponse.data : [];
+        const pedidosPendentesTotal = pedidosPendentesResponse.data?.total || 0;
+
+        // Calcula o valor total em estoque
         const valorTotal = itens.reduce((total, item) => {
-          return total + (item.preco || 0) * (item.quantidade || 0);
+          return total + (Number(item.preco) || 0) * (Number(item.quantidade) || 0);
         }, 0);
 
-        console.log('Itens:', itens);
-        
+        // Filtra itens com estoque baixo
         const estoqueBaixo = itens.filter(item => {
-          console.log(`Item ${item.nome}:`, {
-            quantidade: item.quantidade,
-            estoque_minimo: item.quantidade_minima // Alterado para quantidade_minima
-          });
-          // Converte para número e verifica se a quantidade é menor ou igual à quantidade mínima
           return Number(item.quantidade) <= Number(item.quantidade_minima);
         }).length;
-
-        console.log('Total itens com estoque baixo:', estoqueBaixo);
 
         // Filtra movimentações das últimas 24 horas
         const ultimas24h = movimentacoes.filter(mov => {
@@ -128,7 +121,7 @@ const Dashboard = () => {
           estoqueBaixo: estoqueBaixo
         });
 
-        // Processar dados para o gráfico
+        // Processa dados para o gráfico
         const hoje = new Date();
         const ultimos7Dias = Array.from({ length: 7 }, (_, i) => {
           const data = new Date(hoje);
@@ -137,14 +130,14 @@ const Dashboard = () => {
         }).reverse();
 
         const dadosGrafico = ultimos7Dias.map(data => {
-          const movimentacoesDia = movimentacoesResponse.data.filter(mov => {
+          const movimentacoesDia = movimentacoes.filter(mov => {
             const movData = new Date(mov.created_at);
             return movData.toDateString() === data.toDateString();
           });
 
           const entradas = movimentacoesDia.filter(mov => mov.tipo === 'entrada')
             .reduce((total, mov) => total + Number(mov.quantidade), 0);
-          
+
           const saidas = movimentacoesDia.filter(mov => mov.tipo === 'saida')
             .reduce((total, mov) => total + Number(mov.quantidade), 0);
 
@@ -336,7 +329,7 @@ const Dashboard = () => {
                 <FaExchangeAlt size={24} color="#388e3c" />
               </CardHeader>
               <CardValue>{dashboardData.movimentacoes}</CardValue>
-              <CardContent>
+              <CardContent></CardContent>
                 <p style={{ color: '#666' }}>Últimas 24 horas</p>
               </CardContent>
             </Card>

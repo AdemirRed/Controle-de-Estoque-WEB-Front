@@ -52,7 +52,7 @@ const Login = () => {
       await auth.signIn(credentials);
       // Salva ou remove email e rememberMe do localStorage
       if (credentials.rememberMe) {
-        localStorage.setItem('email', credentials.email);
+        localStorage.setItem('email', credentials.email || '');
         localStorage.setItem('rememberMe', 'true');
       } else {
         localStorage.removeItem('email');
@@ -66,8 +66,9 @@ const Login = () => {
       if (err?.response?.status === 401) {
         setError('Usuário ou senha incorretos!');
       } else {
-        setError(err.message || 'Falha na autenticação. Verifique suas credenciais.');
+        setError(err?.message || 'Falha na autenticação. Verifique suas credenciais.');
       }
+      toast.error('Falha na autenticação');
     }
   };
 
@@ -121,7 +122,7 @@ const Login = () => {
                   color: '#4a90e2',
                   fontSize: 22,
                   position: 'absolute',
-                  top: '9px', // centralizado
+                  top: '9px',
                   right: '12px',
                   zIndex: 2
                 }}

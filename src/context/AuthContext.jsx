@@ -113,9 +113,16 @@ export const AuthProvider = ({ children }) => {
   const checkUserData = async (forceUpdate = false) => {
     try {
       const token = localStorage.getItem('@App:token') || sessionStorage.getItem('@App:token');
-      const storedUser = JSON.parse(localStorage.getItem('@App:user') || sessionStorage.getItem('@App:user') || '{}');
+      // Garante que storedUser seja um objeto válido ou um objeto vazio
+      let storedUser = {};
+      try {
+        const userStr = localStorage.getItem('@App:user') || sessionStorage.getItem('@App:user') || '{}';
+        storedUser = JSON.parse(userStr);
+      } catch (e) {
+        console.error('Erro ao parsear dados do usuário:', e);
+      }
       
-      if (!token || !storedUser.id) {
+      if (!token || !storedUser || !storedUser.id) {
         signOut();
         return;
       }
@@ -178,20 +185,35 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const loadStorageData = () => {
-      // Tentar recuperar dados do localStorage primeiro
-      const storageToken = localStorage.getItem('@App:token');
-      const storageUser = localStorage.getItem('@App:user');
-      
-      // Se não encontrar, tentar do sessionStorage
-      const sessionToken = sessionStorage.getItem('@App:token');
-      const sessionUser = sessionStorage.getItem('@App:user');
+      try {
+        // Tentar recuperar dados do localStorage primeiro
+        const storageToken = localStorage.getItem('@App:token');
+        const storageUserStr = localStorage.getItem('@App:user');
+        
+        // Se não encontrar, tentar do sessionStorage
+        const sessionToken = sessionStorage.getItem('@App:token');
+        const sessionUserStr = sessionStorage.getItem('@App:user');
 
-      if (storageToken && storageUser) {
-        api.defaults.headers.common['Authorization'] = `Bearer ${storageToken}`;
-        setUser(JSON.parse(storageUser));
-      } else if (sessionToken && sessionUser) {
-        api.defaults.headers.common['Authorization'] = `Bearer ${sessionToken}`;
-        setUser(JSON.parse(sessionUser));
+        if (storageToken && storageUserStr) {
+          api.defaults.headers.common['Authorization'] = `Bearer ${storageToken}`;
+          try {
+            setUser(JSON.parse(storageUserStr));
+          } catch (e) {
+            console.error('Erro ao parsear dados do usuário:', e);
+            signOut();
+          }
+        } else if (sessionToken && sessionUserStr) {
+          api.defaults.headers.common['Authorization'] = `Bearer ${sessionToken}`;
+          try {
+            setUser(JSON.parse(sessionUserStr));
+          } catch (e) {
+            console.error('Erro ao parsear dados do usuário:', e);
+            signOut();
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados da sessão:', error);
+        signOut();
       }
     };
 
