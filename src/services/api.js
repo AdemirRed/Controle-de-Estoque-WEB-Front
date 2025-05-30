@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://redblackspy.ddns.net:2001', // URL do backend
+  baseURL: 'https://redblackspy.ddns.net:2001', // Não use variável de ambiente se não for necessário
   headers: {
     'Content-Type': 'application/json'
   }
