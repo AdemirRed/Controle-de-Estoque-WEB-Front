@@ -1,44 +1,39 @@
+import {
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip
+} from 'chart.js';
 import React, { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-} from 'chart.js';
-import {
-    FaBox,
-    FaChartLine,
-    FaExchangeAlt,
-    FaExclamationTriangle,
-    FaShoppingCart,
-    FaSignOutAlt,
-    FaUser,
-    FaBars
+  FaBars,
+  FaBox,
+  FaChartLine,
+  FaExchangeAlt,
+  FaExclamationTriangle,
+  FaShoppingCart
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import MenuSidebar from '../../components/MenuSidebar';
 import HeaderComponent from '../../components/Header';
+import MenuSidebar from '../../components/MenuSidebar';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-    CardValue,
-    ChartSection,
-    DashboardGrid,
-    Header,
-    Layout,
-    LogoutButton,
-    MainContent,
-    UserInfo
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardValue,
+  ChartSection,
+  DashboardGrid,
+  Layout,
+  MainContent
 } from './styles';
 
 // Registrar os componentes do Chart.js
@@ -329,7 +324,7 @@ const Dashboard = () => {
                 <FaExchangeAlt size={24} color="#388e3c" />
               </CardHeader>
               <CardValue>{dashboardData.movimentacoes}</CardValue>
-              <CardContent></CardContent>
+              <CardContent>
                 <p style={{ color: '#666' }}>Últimas 24 horas</p>
               </CardContent>
             </Card>

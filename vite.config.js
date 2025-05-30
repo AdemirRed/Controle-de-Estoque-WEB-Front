@@ -25,11 +25,16 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/auth/, ''),
       },
       '/socket': {
-        target: 'ws://redblackspy.ddns.net:2010',
+        target: 'wss://redblackspy.ddns.net:2010',
         ws: true,
         changeOrigin: true,
         rewrite: path => path.replace(/^\/socket/, '/ws'),
       }
+    },
+    hmr: {
+      protocol: 'wss',
+      host: 'redblackspy.ddns.net',
+      port: 2002
     }
   },
   plugins: [react()]
