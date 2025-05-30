@@ -36,7 +36,6 @@ export function ForgotPassword() {
   // Timer de expiração do código
   useEffect(() => {
     if (!sent || resetDone) return;
-    setCodeExpiresIn(300);
     if (codeTimerRef.current) clearInterval(codeTimerRef.current);
     codeTimerRef.current = setInterval(() => {
       setCodeExpiresIn(prev => {
@@ -134,7 +133,20 @@ export function ForgotPassword() {
         return;
       }
       toast.success('Novo código enviado! Verifique seu e-mail.');
-      setCodeExpiresIn(300); // reinicia timer do código
+      // Reinicia o timer de expiração do código corretamente
+      setCodeExpiresIn(300);
+      if (codeTimerRef.current) clearInterval(codeTimerRef.current);
+      codeTimerRef.current = setInterval(() => {
+        setCodeExpiresIn(prev => {
+          if (prev <= 1) {
+            clearInterval(codeTimerRef.current);
+            toast.warn('O código expirou. Solicite um novo código.');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
       setResendCount(prev => prev + 1);
       setResendDelay(prev => Math.min(prev * 2, 480));
       setCanResend(false);
