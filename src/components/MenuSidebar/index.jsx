@@ -1,14 +1,14 @@
 import React from 'react';
 import {
-  FaBox,
-  FaClipboardList,
-  FaFileAlt,
-  FaHandshake,
-  FaHome,
-  FaRuler,
-  FaUsers,
-  FaWarehouse,
-  FaPlusCircle
+    FaBox,
+    FaClipboardList,
+    FaFileAlt,
+    FaHandshake,
+    FaHome,
+    FaPlusCircle,
+    FaRuler,
+    FaUsers,
+    FaWarehouse
 } from 'react-icons/fa';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -37,7 +37,7 @@ const MenuSidebar = ({ onNavigate }) => {
 
   return (
     <Sidebar $open={true}>
-      <Logo>OnnMoveis</Logo>
+      <Logo>Contole Estoque</Logo>
       <MenuItem
         className={isActive('/dashboard') ? 'active' : ''}
         onClick={() => handleNavigate('/dashboard')}

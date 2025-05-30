@@ -2,14 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import {
-  Button,
-  Container,
-  Form,
-  Input,
-  LoginBox,
-  RememberMeContainer,
-  Title
+    Button,
+    Container,
+    Form,
+    Input,
+    LoginBox,
+    RememberMeContainer,
+    Title
 } from './styles';
 
 const Login = () => {
@@ -21,6 +22,7 @@ const Login = () => {
     rememberMe: localStorage.getItem('rememberMe') === 'true'
   });
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // Redireciona para o dashboard se já estiver logado
   useEffect(() => {
@@ -72,7 +74,7 @@ const Login = () => {
   return (
     <Container>
       <LoginBox>
-        <Title>OnnMoveis</Title>
+        <Title>Contole Estoque</Title>
         <h2 style={{
           textAlign: 'center',
           color: '#4a90e2',
@@ -98,14 +100,49 @@ const Login = () => {
             onChange={handleChange}
             required
           />
-          <Input
-            type="password"
-            name="password"
-            placeholder="Senha"
-            value={credentials.password}
-            onChange={handleChange}
-            required
-          />
+          <div style={{ position: 'relative', marginBottom: 10 }}>
+            <label htmlFor="password" style={{ color: '#fff', fontSize: 14, marginBottom: 2 }}>Senha:</label>
+            <div style={{
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              position: 'relative',
+              marginBottom: 2,
+              marginTop: 2
+            }}>
+              <button
+                type="button"
+                onClick={() => setShowPassword(v => !v)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#4a90e2',
+                  fontSize: 22,
+                  position: 'absolute',
+                  top: '9px', // centralizado
+                  right: '12px',
+                  zIndex: 2
+                }}
+                tabIndex={-1}
+                aria-label={showPassword ? 'Ocultar senha' : 'Exibir senha'}
+              >
+                {showPassword ? <FiEyeOff /> : <FiEye />}
+              </button>
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                placeholder="Senha"
+                value={credentials.password}
+                onChange={handleChange}
+                required
+                autoComplete="current-password"
+                style={{ width: '100%', paddingRight: 38, marginTop: 0 }}
+              />
+            </div>
+          </div>
           <RememberMeContainer>
             <input
               type="checkbox"

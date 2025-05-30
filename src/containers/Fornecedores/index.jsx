@@ -24,6 +24,12 @@ function Fornecedores() {
   // Adicione o controle do menu lateral responsivo
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
 
+  // Paginação
+  const [pagina, setPagina] = useState(1);
+  const fornecedoresPorPagina = 20;
+  const totalPaginas = Math.ceil(fornecedores.length / fornecedoresPorPagina);
+  const fornecedoresPaginados = fornecedores.slice((pagina - 1) * fornecedoresPorPagina, pagina * fornecedoresPorPagina);
+
   useEffect(() => {
     loadFornecedores();
   }, []);
@@ -335,7 +341,7 @@ function Fornecedores() {
                   </tr>
                 </thead>
                 <tbody>
-                  {fornecedores.map(fornecedor => (
+                  {fornecedoresPaginados.map(fornecedor => (
                     <tr key={fornecedor.id}>
                       <td>{fornecedor.nome}</td>
                       <td>{fornecedor.telefone}</td>
@@ -363,6 +369,16 @@ function Fornecedores() {
                   ))}
                 </tbody>
               </table>
+              {/* Paginação */}
+              {totalPaginas > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>
+                  <button className="paginacao-btn" onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}>Anterior</button>
+                  <span style={{ margin: '0 12px', color: '#00eaff' }}>
+                    Página {pagina} de {totalPaginas}
+                  </span>
+                  <button className="paginacao-btn" onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}>Próxima</button>
+                </div>
+              )}
             </div>
           </>
         ) : (

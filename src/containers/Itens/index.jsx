@@ -213,6 +213,12 @@ const Itens = () => {
     return nomeOk && dataOk;
   });
 
+  // Paginação
+  const [pagina, setPagina] = useState(1);
+  const itensPorPagina = 20;
+  const totalPaginas = Math.ceil(itensFiltrados.length / itensPorPagina);
+  const itensPaginados = itensFiltrados.slice((pagina - 1) * itensPorPagina, pagina * itensPorPagina);
+
   // Adicionar controle do menu lateral responsivo
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
 
@@ -570,14 +576,14 @@ const Itens = () => {
                       Carregando...
                     </Td>
                   </tr>
-                ) : itensFiltrados.length === 0 ? (
+                ) : itensPaginados.length === 0 ? (
                   <tr>
                     <Td colSpan="7" style={{ textAlign: 'center' }}>
                       Nenhum item encontrado
                     </Td>
                   </tr>
                 ) : (
-                  itensFiltrados.map((item) => (
+                  itensPaginados.map((item) => (
                     <tr key={item.id}>
                       <Td className="nome-item">{item.nome}</Td>
                       <Td>{item.quantidade}</Td>
@@ -613,6 +619,16 @@ const Itens = () => {
                 )}
               </tbody>
             </Table>
+            {/* Paginação */}
+            {totalPaginas > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>
+                <button className="paginacao-btn" onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}>Anterior</button>
+                <span style={{ margin: '0 12px', color: '#00eaff' }}>
+                  Página {pagina} de {totalPaginas}
+                </span>
+                <button className="paginacao-btn" onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}>Próxima</button>
+              </div>
+            )}
           </TableContainer>
         </Container>
       </MainContent>

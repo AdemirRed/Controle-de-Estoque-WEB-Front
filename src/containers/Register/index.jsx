@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import {
     Button,
     Container,
@@ -22,6 +23,7 @@ const Register = () => {
     papel: 'usuario'
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -70,23 +72,49 @@ const Register = () => {
             onChange={handleChange}
             required
           />
-          <Input
-            type="password"
-            name="password"
-            placeholder="Senha"
-            value={form.password}
-            onChange={handleChange}
-            required
-          />
-          {/* Se quiser permitir escolha do papel, descomente abaixo */}
-          {/* <Input
-            type="text"
-            name="papel"
-            placeholder="Papel"
-            value={form.papel}
-            onChange={handleChange}
-            required
-          /> */}
+          <div style={{ position: 'relative', marginBottom: 10 }}>
+            <label htmlFor="password" style={{ color: '#fff', fontSize: 14, marginBottom: 2 }}>Senha:</label>
+            <div style={{
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              position: 'relative',
+              marginBottom: 2,
+              marginTop: 2
+            }}>
+              <button
+                type="button"
+                onClick={() => setShowPassword(v => !v)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#4a90e2',
+                  fontSize: 22,
+                  position: 'absolute',
+                  top: '9px', // centralizado
+                  right: '12px',
+                  zIndex: 2
+                }}
+                tabIndex={-1}
+                aria-label={showPassword ? 'Ocultar senha' : 'Exibir senha'}
+              >
+                {showPassword ? <FiEyeOff /> : <FiEye />}
+              </button>
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                placeholder="Senha"
+                value={form.password}
+                onChange={handleChange}
+                required
+                autoComplete="new-password"
+                style={{ width: '100%', paddingRight: 38, marginTop: 0 }}
+              />
+            </div>
+          </div>
           <Button type="submit" disabled={loading}>
             {loading ? 'Criando...' : 'Criar Conta'}
           </Button>

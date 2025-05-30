@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from 'react';
 import { FaEye, FaWindowClose, FaEdit, FaTrash } from 'react-icons/fa';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import HeaderComponent from '../../components/Header';
@@ -20,9 +21,16 @@ function Usuarios() {
   const [usuarios, setUsuarios] = useState([]);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Adicione o controle do menu lateral responsivo
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
+
+  // Paginação
+  const [pagina, setPagina] = useState(1);
+  const usuariosPorPagina = 20;
+  const totalPaginas = Math.ceil(usuarios.length / usuariosPorPagina);
+  const usuariosPaginados = usuarios.slice((pagina - 1) * usuariosPorPagina, pagina * usuariosPorPagina);
 
   useEffect(() => {
     // Fecha o menu lateral ao trocar de rota em telas pequenas
@@ -295,12 +303,50 @@ function Usuarios() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
               />
-              <input
-                type="password"
-                placeholder={editingId ? 'Nova senha (opcional)' : 'Senha'}
-                value={senha}
-                onChange={e => setSenha(e.target.value)}
-              />
+              <div style={{ position: 'relative', marginBottom: 10 }}>
+                <label htmlFor="senha" style={{ color: '#fff', fontSize: 14, marginBottom: 2 }}>
+                  {editingId ? 'Nova senha (opcional)' : 'Senha:'}
+                </label>
+                <div style={{
+                  width: '100%',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  position: 'relative',
+                  marginBottom: 2,
+                  marginTop: 2
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#4a90e2',
+                      fontSize: 22,
+                      position: 'absolute',
+                      top: '9px', // centralizado
+                      right: '12px',
+                      zIndex: 2
+                    }}
+                    tabIndex={-1}
+                    aria-label={showPassword ? 'Ocultar senha' : 'Exibir senha'}
+                  >
+                    {showPassword ? <FiEyeOff /> : <FiEye />}
+                  </button>
+                  <input
+                    id="senha"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder={editingId ? 'Nova senha (opcional)' : 'Senha'}
+                    value={senha}
+                    onChange={e => setSenha(e.target.value)}
+                    required={!editingId}
+                    autoComplete={editingId ? 'new-password' : 'current-password'}
+                    style={{ width: '100%', paddingRight: 38, marginTop: 0 }}
+                  />
+                </div>
+              </div>
               <label>
                 <span>Papel do Usuário</span>
                 <select 
@@ -331,7 +377,7 @@ function Usuarios() {
                   </tr>
                 </thead>
                 <tbody>
-                  {usuarios.map(usuario => (
+                  {usuariosPaginados.map(usuario => (
                     <tr key={usuario.id}>
                       <td>{usuario.nome}</td>
                       <td>{usuario.email}</td>
@@ -367,6 +413,16 @@ function Usuarios() {
                   ))}
                 </tbody>
               </table>
+              {/* Paginação */}
+              {totalPaginas > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>
+                  <button className="paginacao-btn" onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}>Anterior</button>
+                  <span style={{ margin: '0 12px', color: '#00eaff' }}>
+                    Página {pagina} de {totalPaginas}
+                  </span>
+                  <button className="paginacao-btn" onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}>Próxima</button>
+                </div>
+              )}
             </div>
 
             {showDetailsModal && selectedUser && (

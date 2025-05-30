@@ -151,6 +151,12 @@ const UnidadesMedida = () => {
     return nomeOk && dataOk;
   });
 
+  // Paginação
+  const [pagina, setPagina] = useState(1);
+  const unidadesPorPagina = 20;
+  const totalPaginas = Math.ceil(unidadesFiltradas.length / unidadesPorPagina);
+  const unidadesPaginadas = unidadesFiltradas.slice((pagina - 1) * unidadesPorPagina, pagina * unidadesPorPagina);
+
   return (
     <Layout>
       {/* Botão de abrir menu lateral fixo em telas pequenas */}
@@ -344,14 +350,14 @@ const UnidadesMedida = () => {
                       Carregando...
                     </Td>
                   </tr>
-                ) : unidadesFiltradas.length === 0 ? (
+                ) : unidadesPaginadas.length === 0 ? (
                   <tr>
                     <Td colSpan="5" style={{ textAlign: 'center' }}>
                       Nenhuma unidade de medida encontrada
                     </Td>
                   </tr>
                 ) : (
-                  unidadesFiltradas.map((unidade) => (
+                  unidadesPaginadas.map((unidade) => (
                     <tr key={unidade.id}>
                       <Td>{unidade.nome}</Td>
                       <Td>{unidade.sigla}</Td>
@@ -379,6 +385,16 @@ const UnidadesMedida = () => {
                 )}
               </tbody>
             </Table>
+            {/* Paginação */}
+            {totalPaginas > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>
+                <button className="paginacao-btn" onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}>Anterior</button>
+                <span style={{ margin: '0 12px', color: '#00eaff' }}>
+                  Página {pagina} de {totalPaginas}
+                </span>
+                <button className="paginacao-btn" onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}>Próxima</button>
+              </div>
+            )}
           </TableContainer>
         </Container>
       </MainContent>

@@ -1,10 +1,10 @@
 /* eslint-disable no-unused-vars */
 import {
-  Alert, Button, Dialog, FormControl, IconButton,
-  InputLabel,
-  MenuItem, Paper,
-  Select, Snackbar, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, TextField
+    Alert, Button, Dialog, FormControl, IconButton,
+    InputLabel,
+    MenuItem, Paper,
+    Select, Snackbar, Table, TableBody, TableCell, TableContainer,
+    TableHead, TableRow, TextField
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { FaBars, FaEdit, FaEye, FaTimes, FaWhatsapp, FaWindowClose } from 'react-icons/fa';
@@ -15,14 +15,14 @@ import MenuSidebar from '../../components/MenuSidebar';
 import { useAuth } from '../../context/AuthContext';
 import { PedidoService } from '../../services/pedidoService';
 import {
-  ButtonContainer,
-  Container,
-  DetailsContainer, DetailsHeader,
-  DetailsLabel,
-  DetailsRow,
-  DetailsValue,
-  FormContainer,
-  FormWrapper
+    ButtonContainer,
+    Container,
+    DetailsContainer, DetailsHeader,
+    DetailsLabel,
+    DetailsRow,
+    DetailsValue,
+    FormContainer,
+    FormWrapper
 } from './styles';
 
 function showBrowserNotification(title, body) {
@@ -103,6 +103,10 @@ const Pedidos = () => {
   const [busca, setBusca] = useState('');
   const [buscaPeriodo, setBuscaPeriodo] = useState([null, null]);
   const [statusFiltro, setStatusFiltro] = useState('todos');
+
+  // Paginação
+  const [pagina, setPagina] = useState(1);
+  const pedidosPorPagina = 20;
 
   useEffect(() => {
     carregarPedidos();
@@ -348,6 +352,9 @@ const Pedidos = () => {
     return buscaOk && buscaDataOk && statusOk;
   });
 
+  const totalPaginas = Math.ceil(pedidosFiltrados.length / pedidosPorPagina);
+  const pedidosPaginados = pedidosFiltrados.slice((pagina - 1) * pedidosPorPagina, pagina * pedidosPorPagina);
+
   // Funções rápidas para selecionar períodos
   const handlePeriodoHoje = () => {
     const hoje = new Date();
@@ -543,7 +550,7 @@ const Pedidos = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {pedidosFiltrados.map((pedido, idx) => {
+                  {pedidosPaginados.map((pedido, idx) => {
                     // Nome do item: se existir Item.nome, usa ele, senão usa item_nome
                     const nomeItem = pedido.Item?.nome || pedido.item_nome || '-';
                     // Unidade de medida: se existir unidade_medida.sigla, usa ela, senão usa vazio
@@ -665,7 +672,7 @@ https://maps.app.goo.gl/cPVRLrGF4vZkxEqh7
 Agradecemos pela parceria e aguardamos a confirmação do recebimento deste pedido. Qualquer dúvida, estamos à disposição! 🤝
 
 Atenciosamente,
-Equipe ⚪ OnnMoveis 🔵
+Equipe ⚪ Contole Estoque 🔵
 
 > Feito por _RedBlack_
 `;
@@ -696,6 +703,16 @@ Equipe ⚪ OnnMoveis 🔵
                   })}
                 </TableBody>
               </Table>
+              {/* Paginação */}
+              {totalPaginas > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>
+                  <button className="paginacao-btn" onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}>Anterior</button>
+                  <span style={{ margin: '0 12px', color: '#00eaff' }}>
+                    Página {pagina} de {totalPaginas}
+                  </span>
+                  <button className="paginacao-btn" onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}>Próxima</button>
+                </div>
+              )}
             </TableContainer>
 
             {/* Dialog do Formulário */}

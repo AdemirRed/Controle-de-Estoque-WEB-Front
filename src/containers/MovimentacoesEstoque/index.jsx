@@ -30,6 +30,12 @@ const MovimentacoesEstoque = () => {
     observacao: ''
   });
 
+  // Paginação
+  const [pagina, setPagina] = useState(1);
+  const movsPorPagina = 20;
+  const totalPaginas = Math.ceil(movimentacoes.length / movsPorPagina);
+  const movsPaginados = movimentacoes.slice((pagina - 1) * movsPorPagina, pagina * movsPorPagina);
+
   // Adicione o controle do menu lateral responsivo
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
 
@@ -312,7 +318,7 @@ const MovimentacoesEstoque = () => {
                 </tr>
               </thead>
               <tbody>
-                {movimentacoes.map((mov) => (
+                {movsPaginados.map((mov) => (
                   <tr key={mov.id}>
                     <td>{mov.item_nome}</td>
                     <td>{mov.quantidade}</td>
@@ -326,6 +332,16 @@ const MovimentacoesEstoque = () => {
                 ))}
               </tbody>
             </table>
+            {/* Paginação */}
+            {totalPaginas > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>
+                <button className="paginacao-btn" onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}>Anterior</button>
+                <span style={{ margin: '0 12px', color: '#00eaff' }}>
+                  Página {pagina} de {totalPaginas}
+                </span>
+                <button className="paginacao-btn" onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}>Próxima</button>
+              </div>
+            )}
           </ListContainer>
         </Container>
       </MainContent>
