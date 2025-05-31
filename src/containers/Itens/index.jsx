@@ -10,6 +10,7 @@ import {
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import FiltrosPadrao from '../../components/FiltrosPadrao';
 import HeaderComponent from '../../components/Header';
 import MenuSidebar from '../../components/MenuSidebar';
 import { useAuth } from '../../context/AuthContext';
@@ -40,12 +41,11 @@ import {
   Th,
   Title
 } from './styles';
-import FiltrosPadrao from '../../components/FiltrosPadrao';
 
 const Itens = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const isAdmin = user?.role === 'admin'; // Verificar se o usuário é administrador
+  const isAdmin = user?.papel === 'admin'; // Ajustar verificação de administrador
   const [showForm, setShowForm] = useState(false);
   const [itens, setItens] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -573,13 +573,13 @@ const Itens = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <Td colSpan="7" style={{ textAlign: 'center' }}>
+                    <Td colSpan={isAdmin ? "5" : "4"} style={{ textAlign: 'center' }}>
                       Carregando...
                     </Td>
                   </tr>
                 ) : itensPaginados.length === 0 ? (
                   <tr>
-                    <Td colSpan="7" style={{ textAlign: 'center' }}>
+                    <Td colSpan={isAdmin ? "5" : "4"} style={{ textAlign: 'center' }}>
                       Nenhum item encontrado
                     </Td>
                   </tr>
