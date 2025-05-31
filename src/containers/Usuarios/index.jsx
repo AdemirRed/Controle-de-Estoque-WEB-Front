@@ -80,11 +80,20 @@ function Usuarios() {
   const loadUsuarios = async () => {
     try {
       const response = await api.get('/usuarios');
-      // Garante que todos os usuários tenham o campo papel preenchido
-      const usuariosComPapel = response.data.map(u => ({
-        ...u,
-        papel: u.papel || 'usuario'
-      }));
+      const usuariosBase = response.data;
+
+      // Buscar o papel de cada usuário individualmente
+      const usuariosComPapel = await Promise.all(
+        usuariosBase.map(async (u) => {
+          try {
+            const res = await api.get(`/usuarios/${u.id}`);
+            return { ...u, papel: res.data.papel };
+          } catch {
+            // Se falhar, retorna sem papel
+            return { ...u, papel: undefined };
+          }
+        })
+      );
       setUsuarios(usuariosComPapel);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
@@ -186,11 +195,11 @@ function Usuarios() {
   };
 
   const formatarPapel = (papel) => {
-    // Remove o log ou deixe apenas para debug
-    // console.log('Formatando papel:', papel);
-    if (!papel || papel === 'usuario') return 'Usuário';
-    if (papel === 'admin') return 'Administrador';
-    return papel;
+    if (papel === null || papel === undefined || (typeof papel === 'string' && papel.trim() === '')) return 'Não informado';
+    const papelLower = String(papel).trim().toLowerCase();
+    if (['admin', 'administrador', 'adm'].includes(papelLower)) return 'Administrador';
+    if (['usuario', 'usuário', 'user'].includes(papelLower)) return 'Usuário';
+    return papel.charAt(0).toUpperCase() + papel.slice(1);
   };
 
   const formatarData = (data) => {

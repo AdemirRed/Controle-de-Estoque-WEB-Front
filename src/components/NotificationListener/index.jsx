@@ -241,7 +241,7 @@ const NotificationListener = () => {
 
               lastUserRequisicoesRef.set(req.id, req.status);
             });
-          } catch (e) {
+          } catch {
             // Silencie erros de polling de requisições
           }
         }
