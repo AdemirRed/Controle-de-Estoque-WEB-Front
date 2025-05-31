@@ -63,12 +63,12 @@ const Itens = () => {
   const [buscaPeriodo, setBuscaPeriodo] = useState([null, null]);
 
   const formatarMoeda = (valor) => {
-    return valor
+    return valor !== null && valor !== 0
       ? new Intl.NumberFormat('pt-BR', {
           style: 'currency',
           currency: 'BRL'
         }).format(valor)
-      : 'Não informado';
+      : 'R$ 0,00';
   };
 
   const carregarItens = async () => {

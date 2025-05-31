@@ -28,7 +28,7 @@ export default function FiltrosPadrao({
       <TextField
         label="Buscar por Nº ou Nome"
         value={busca}
-        onChange={e => setBusca(e.target.value)}
+        onChange={e => setBusca(e.target.value.toLowerCase())} // Garantir busca em letras minúsculas
         size="small"
         sx={{ minWidth: 200, input: { color: '#fff' }, label: { color: '#fff' } }}
       />
