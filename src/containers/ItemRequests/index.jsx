@@ -1,10 +1,4 @@
 /* eslint-disable no-unused-vars */
-import {
-    MenuItem,
-    Select as MuiSelect,
-    Paper,
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow
-} from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
@@ -13,13 +7,12 @@ import MenuSidebar from '../../components/MenuSidebar';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import {
-    Button,
-    Container,
-    Input,
-    Label,
-    RequestForm,
-    RequestList,
-    RequestItem
+  Button,
+  Input,
+  Label,
+  RequestForm,
+  RequestItem,
+  RequestList
 } from './styles';
 
 const statusLabels = {
@@ -561,6 +554,31 @@ const ItemRequests = () => {
                     placeholder="Opcional"
                   />
                 </Label>
+                {user?.papel === 'admin' && (
+                  <Label>
+                    Usuário
+                    <select
+                      value={novoItem.usuarioId}
+                      onChange={e => setNovoItem({ ...novoItem, usuarioId: e.target.value })}
+                      required
+                      style={{
+                        background: '#232a36',
+                        color: '#eaf6fb',
+                        border: '1px solid #00eaff44',
+                        borderRadius: 6,
+                        padding: '6px 10px',
+                        marginLeft: 8
+                      }}
+                    >
+                      <option value="">Selecione um usuário</option>
+                      {usuarios.map(usuario => (
+                        <option key={usuario.id} value={usuario.id}>
+                          {usuario.nome}
+                        </option>
+                      ))}
+                    </select>
+                  </Label>
+                )}
                 <Button type="submit" disabled={submitting}>
                   {submitting ? 'Enviando...' : 'Solicitar'}
                 </Button>

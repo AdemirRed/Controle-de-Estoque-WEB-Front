@@ -172,6 +172,29 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Função para atualizar um item
+  const handleUpdate = async (itemId, updatedData) => {
+    try {
+      const response = await api.put(`/itens/${itemId}`, updatedData);
+      toast.success('Item atualizado com sucesso!');
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao atualizar item:', error);
+      if (error.response) {
+        console.error('Detalhes do erro:', {
+          status: error.response.status,
+          data: error.response.data,
+        });
+        toast.error(
+          error.response.data?.message || 'Erro ao atualizar item. Tente novamente.'
+        );
+      } else {
+        toast.error('Erro de conexão. Verifique sua rede.');
+      }
+      throw error;
+    }
+  };
+
   // Verificar dados a cada 30 segundos
   useEffect(() => {
     const interval = setInterval(() => {
@@ -254,6 +277,7 @@ export const AuthProvider = ({ children }) => {
         signIn, 
         signOut,
         signUp, // Adiciona signUp ao contexto
+        handleUpdate, // Adiciona handleUpdate ao contexto
         loading: false 
       }}
     >

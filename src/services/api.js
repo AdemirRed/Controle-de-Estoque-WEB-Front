@@ -21,6 +21,13 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   response => response,
   error => {
+    console.error('Erro na resposta da API:', error);
+    if (error.response) {
+      console.error('Detalhes do erro:', {
+        status: error.response.status,
+        data: error.response.data,
+      });
+    }
     if (error.response?.status === 401) {
       localStorage.removeItem('@App:token');
       localStorage.removeItem('@App:user');
