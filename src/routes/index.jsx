@@ -20,7 +20,7 @@ const PrivateRoute = ({ element, requiredRole = null }) => {
     return <Navigate to="/login" replace />;
   }
   
-  if (requiredRole && user.papel !== requiredRole) {
+  if (requiredRole && user.papel.toLowerCase() !== requiredRole.toLowerCase()) {
     return <Navigate to="/dashboard" replace />;
   }
   
@@ -69,7 +69,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/usuarios',
-    element: <PrivateRoute element={<Usuarios />} requiredRole="ADMIN" />
+    element: <PrivateRoute element={<Usuarios />} requiredRole="admin" />
   },
   {
     path: '/fornecedores',

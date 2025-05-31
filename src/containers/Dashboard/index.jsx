@@ -362,6 +362,23 @@ const Dashboard = () => {
                 <p style={{ color: '#666' }}>Itens abaixo do mínimo</p>
               </CardContent>
             </Card>
+
+            <Card
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/usuarios')}
+              title="Ver usuários"
+            >
+              <CardHeader>
+                <CardTitle>Usuários</CardTitle>
+                <FaBars size={24} color="#1a237e" />
+              </CardHeader>
+              <CardValue>
+                {loading ? 'Carregando...' : 'Acesse os usuários'}
+              </CardValue>
+              <CardContent>
+                <p style={{ color: '#666' }}>Gerencie os usuários cadastrados</p>
+              </CardContent>
+            </Card>
           </DashboardGrid>
 
           <ChartSection>

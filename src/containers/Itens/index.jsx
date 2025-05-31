@@ -45,6 +45,7 @@ import FiltrosPadrao from '../../components/FiltrosPadrao';
 const Itens = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const isAdmin = user?.role === 'admin'; // Verificar se o usuário é administrador
   const [showForm, setShowForm] = useState(false);
   const [itens, setItens] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -565,7 +566,7 @@ const Itens = () => {
                   <Th>Nome</Th>
                   <Th>Quantidade</Th>
                   <Th>Qtd. Mínima</Th>
-                  <Th>Preço</Th>
+                  {isAdmin && <Th>Preço</Th>} {/* Mostrar preço apenas para administradores */}
                   <Th>Ações</Th>
                 </tr>
               </thead>
@@ -588,16 +589,9 @@ const Itens = () => {
                       <Td className="nome-item">{item.nome}</Td>
                       <Td>{item.quantidade}</Td>
                       <Td>{item.quantidade_minima}</Td>
-                      <Td>{formatarMoeda(item.preco)}</Td>
+                      {isAdmin && <Td>{formatarMoeda(item.preco)}</Td>} {/* Mostrar preço apenas para administradores */}
                       <Td>
                         <ActionButtonGroup>
-                          <ActionButton
-                            className="edit-button"
-                            onClick={() => handleEdit(item)}
-                            data-tooltip="Editar"
-                          >
-                            <FaEdit />
-                          </ActionButton>
                           <ActionButton
                             className="view-button"
                             onClick={() => handleDetails(item.id)}
@@ -605,13 +599,24 @@ const Itens = () => {
                           >
                             <FaEye />
                           </ActionButton>
-                          <ActionButton
-                            className="delete-button"
-                            onClick={() => handleDelete(item.id)}
-                            data-tooltip="Excluir"
-                          >
-                            <FaTrash />
-                          </ActionButton>
+                          {isAdmin && (
+                            <>
+                              <ActionButton
+                                className="edit-button"
+                                onClick={() => handleEdit(item)}
+                                data-tooltip="Editar"
+                              >
+                                <FaEdit />
+                              </ActionButton>
+                              <ActionButton
+                                className="delete-button"
+                                onClick={() => handleDelete(item.id)}
+                                data-tooltip="Excluir"
+                              >
+                                <FaTrash />
+                              </ActionButton>
+                            </>
+                          )}
                         </ActionButtonGroup>
                       </Td>
                     </tr>
