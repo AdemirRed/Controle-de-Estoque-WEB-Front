@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import HeaderComponent from '../../components/Header';
 import MenuSidebar from '../../components/MenuSidebar';
+import Paginacao from '../../components/Paginacao';
+import FiltrosPadrao from '../../components/FiltrosPadrao'; // Importação do componente FiltrosPadrao
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { Button, ButtonGroup, Container, Content, DetailsContainer, DetailsHeader, DetailsLabel, DetailsRow, DetailsValue, Form, FormContainer, ActionButton, ActionButtonGroup } from './styles';
@@ -31,6 +33,10 @@ function Usuarios() {
   const usuariosPorPagina = 20;
   const totalPaginas = Math.ceil(usuarios.length / usuariosPorPagina);
   const usuariosPaginados = usuarios.slice((pagina - 1) * usuariosPorPagina, pagina * usuariosPorPagina);
+
+  // Filtros
+  const [busca, setBusca] = useState('');
+  const [buscaPeriodo, setBuscaPeriodo] = useState([null, null]);
 
   useEffect(() => {
     // Fecha o menu lateral ao trocar de rota em telas pequenas
@@ -363,6 +369,39 @@ function Usuarios() {
               )}
             </Form>
 
+            <FiltrosPadrao
+              busca={busca}
+              setBusca={setBusca}
+              buscaPeriodo={buscaPeriodo}
+              setBuscaPeriodo={setBuscaPeriodo}
+              exibirStatus={false}
+              onLimpar={() => {
+                setBusca('');
+                setBuscaPeriodo([null, null]);
+              }}
+              onHoje={() => {
+                const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0);
+                setBuscaPeriodo([hoje, hoje]);
+              }}
+              onSemana={() => {
+                const hoje = new Date();
+                const inicio = new Date(hoje);
+                inicio.setDate(hoje.getDate() - hoje.getDay());
+                inicio.setHours(0, 0, 0, 0);
+                const fim = new Date(inicio);
+                fim.setDate(inicio.getDate() + 6);
+                setBuscaPeriodo([inicio, fim]);
+              }}
+              onMes={() => {
+                const hoje = new Date();
+                const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+                const fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+                setBuscaPeriodo([inicio, fim]);
+              }}
+              resetPagina={() => setPagina(1)} // Reseta a página ao aplicar filtros
+            />
+
             <div className="lista-usuarios">
               <h2>Usuários Cadastrados</h2>
               <table>
@@ -414,15 +453,12 @@ function Usuarios() {
                 </tbody>
               </table>
               {/* Paginação */}
-              {totalPaginas > 1 && (
-                <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>
-                  <button className="paginacao-btn" onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}>Anterior</button>
-                  <span style={{ margin: '0 12px', color: '#00eaff' }}>
-                    Página {pagina} de {totalPaginas}
-                  </span>
-                  <button className="paginacao-btn" onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}>Próxima</button>
-                </div>
-              )}
+              <Paginacao
+                pagina={pagina}
+                totalPaginas={totalPaginas}
+                onPaginaAnterior={() => setPagina(p => Math.max(1, p - 1))}
+                onPaginaProxima={() => setPagina(p => Math.min(totalPaginas, p + 1))}
+              />
             </div>
 
             {showDetailsModal && selectedUser && (

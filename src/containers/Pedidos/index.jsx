@@ -1,976 +1,519 @@
 /* eslint-disable no-unused-vars */
-import {
-    Alert, Button, Dialog, FormControl, IconButton,
-    InputLabel,
-    MenuItem, Paper,
-    Select, Snackbar, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, TextField
-} from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { FaBars, FaEdit, FaEye, FaTimes, FaWhatsapp, FaWindowClose } from 'react-icons/fa';
-import { useLocation } from 'react-router-dom';
-import FiltrosPadrao from '../../components/FiltrosPadrao';
-import Header from '../../components/Header';
+import { FaBars, FaTimes } from 'react-icons/fa';
+import HeaderComponent from '../../components/Header';
 import MenuSidebar from '../../components/MenuSidebar';
+import Paginacao from '../../components/Paginacao';
+import FiltrosPadrao from '../../components/FiltrosPadrao';
 import { useAuth } from '../../context/AuthContext';
 import { PedidoService } from '../../services/pedidoService';
 import {
-    ButtonContainer,
-    Container,
-    DetailsContainer, DetailsHeader,
-    DetailsLabel,
-    DetailsRow,
-    DetailsValue,
-    FormContainer,
-    FormWrapper
+  Button,
+  Input,
+  Label,
+  RequestForm,
+  RequestItem,
+  RequestList,
+  SidebarButton,
+  SidebarContainer,
+  CloseSidebarButton,
+  MainContainer,
+  NewRequestContainer,
+  RequestTitle,
+  RequestListTitle,
+  RequestItemStatus,
+  RequestItemActions,
+  ActionButton,
+  FormRow,
+  OrDivider,
+  FullWidthField,
+  ButtonContainer,
+  Select,
+  ModalOverlay,
+  ModalContent,
+  ModalTitle,
+  ModalButtonContainer,
+  ModalButton,
+  TextArea
 } from './styles';
 
-function showBrowserNotification(title, body) {
-  // Corrigido: só chama se window.Notification existir e for permitido
-  if (
-    typeof window !== 'undefined' &&
-    'Notification' in window &&
-    typeof window.Notification === 'function' &&
-    window.Notification.permission === 'granted'
-  ) {
-    try {
-      new window.Notification(title, { body });
-    } catch (e) {
-      // Silencie erros de construtor ilegal
-      // (ex: ServiceWorker context)
-    }
-  }
-}
+const statusLabels = {
+  pendente: 'Pendente',
+  aprovado: 'Aprovado',
+  rejeitado: 'Rejeitado',
+  entregue: 'Entregue'
+};
 
-// Função global para buscar pedidos pendentes e notificar
-function startPedidosPolling(PedidoService, user) {
-  let lastPendingCount = 0;
-  setInterval(async () => {
-    try {
-      if (!user || user.papel !== 'admin') return;
-      const response = await PedidoService.listarPedidos();
-      const pedidos = response.data || [];
-      const pendentes = pedidos.filter(p => p.status === 'pendente');
-      if (pendentes.length > lastPendingCount) {
-        if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification(
-            'Novo pedido pendente!',
-            { body: `Você tem ${pendentes.length} pedido(s) pendente(s) para aprovar.` }
-          );
-        }
-      }
-      lastPendingCount = pendentes.length;
-    } catch (error) {
-      // Silencie erros de polling
-    }
-  }, 180000); // 3 minutos
-}
+const statusColors = {
+  pendente: '#f57c00',
+  aprovado: '#388e3c',
+  rejeitado: '#c91407',
+  entregue: '#4caf50'
+};
 
 const Pedidos = () => {
-  const [pedidos, setPedidos] = useState([]);
-  const [openForm, setOpenForm] = useState(false);
-  const [openDetails, setOpenDetails] = useState(false);
-  const [selectedPedido, setSelectedPedido] = useState(null);
-  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
   const { user, signOut } = useAuth();
-  const [modo, setModo] = useState('criar');
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
-  const location = useLocation();
-  const [lastPendingCount, setLastPendingCount] = useState(0);
-  
-  // Estados para o formulário
-  const [itens, setItens] = useState([]);
-  const [unidadesMedida, setUnidadesMedida] = useState([]);
-  const [formData, setFormData] = useState({
-    item_id: '',
-    item_nome: '',
-    item_descricao: '',
+  const [pedidos, setPedidos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [novoPedido, setNovoPedido] = useState({
+    itemId: '',
+    itemNome: '',
     quantidade: '',
-    item_unidade_medida_id: '',
+    unidadeMedidaId: '',
     observacoes: ''
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [itens, setItens] = useState([]);
+  const [fornecedores, setFornecedores] = useState([]);
+  const [unidadesMedida, setUnidadesMedida] = useState([]);
+  const [error, setError] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
 
-  const [statusDialog, setStatusDialog] = useState({
+  const [modalRejeicao, setModalRejeicao] = useState({
     open: false,
     pedidoId: null,
-    novoStatus: '',
+    motivo: ''
   });
-  const [fornecedores, setFornecedores] = useState([]);
-  const [fornecedorId, setFornecedorId] = useState('');
-  const [motivoRejeicao, setMotivoRejeicao] = useState('');
-
-  // Filtros de busca
-  const [busca, setBusca] = useState('');
-  const [buscaPeriodo, setBuscaPeriodo] = useState([null, null]);
-  const [statusFiltro, setStatusFiltro] = useState('todos');
 
   // Paginação
   const [pagina, setPagina] = useState(1);
   const pedidosPorPagina = 20;
+  const totalPaginas = Math.ceil(pedidos.length / pedidosPorPagina);
+  const pedidosPaginados = pedidos.slice((pagina - 1) * pedidosPorPagina, pagina * pedidosPorPagina);
+
+  const [busca, setBusca] = useState('');
+  const [buscaPeriodo, setBuscaPeriodo] = useState([null, null]);
 
   useEffect(() => {
-    carregarPedidos();
-    carregarItens();
-    carregarUnidadesMedida();
-  }, []);
-
-  useEffect(() => {
-    if (modo === 'editar' && selectedPedido) {
-      setFormData({
-        item_id: selectedPedido.item_id || '',
-        // Ajuste aqui: pega o nome do item do objeto Item, se existir, senão do campo item_nome
-        item_nome: selectedPedido.Item?.nome || selectedPedido.item_nome || '',
-        item_descricao: selectedPedido.Item?.descricao || selectedPedido.item_descricao || '',
-        quantidade: selectedPedido.quantidade || '',
-        item_unidade_medida_id: selectedPedido.unidade_medida?.id || selectedPedido.item_unidade_medida_id || '',
-        observacoes: selectedPedido.observacoes || ''
-      });
-    }
-  }, [modo, selectedPedido]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setSidebarOpen(window.innerWidth > 900);
-    };
+    const handleResize = () => setSidebarOpen(window.innerWidth > 900);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
-    // Fecha o menu lateral ao trocar de rota em telas pequenas
-    if (window.innerWidth <= 900) {
-      setSidebarOpen(false);
-    }
-     
-  }, [location.pathname]);
+    const fetchItens = async () => {
+      try {
+        const res = await PedidoService.listarItens();
+        setItens(res.data);
+      } catch (err) {
+        console.error('Erro ao carregar itens');
+      }
+    };
+    fetchItens();
+  }, []);
 
   useEffect(() => {
-    // Sempre que pedidos mudar, verifica se há novos pendentes (apenas admin)
-    if (user?.papel === 'admin') {
-      const pendentes = pedidos.filter(p => p.status === 'pendente');
-      if (pendentes.length > lastPendingCount) {
-        showBrowserNotification(
-          'Novo pedido pendente!',
-          `Você tem ${pendentes.length} pedido(s) pendente(s) para aprovar.`
-        );
+    const fetchFornecedores = async () => {
+      try {
+        const res = await PedidoService.listarFornecedores();
+        setFornecedores(res.data);
+      } catch (err) {
+        console.error('Erro ao carregar fornecedores');
       }
-      setLastPendingCount(pendentes.length);
-    }
-  }, [pedidos, user]); // Inclua user na dependência
+    };
+    fetchFornecedores();
+  }, []);
 
   useEffect(() => {
-    // Inicia o polling global apenas uma vez e só para admin
-    if (user?.papel === 'admin' && window.__pedidosPollingStarted !== true) {
-      window.__pedidosPollingStarted = true;
-      startPedidosPolling(PedidoService, user);
-    }
-     
-  }, [user]);
-
-  // Fecha o menu lateral ao navegar em telas pequenas
-  const handleSidebarNavigate = () => {
-    if (window.innerWidth <= 900) {
-      setSidebarOpen(false);
-    }
-  };
-
-  const carregarPedidos = async () => {
-    try {
-      const response = await PedidoService.listarPedidos();
-      setPedidos(response.data);
-    } catch (error) {
-      showNotification('Erro ao carregar pedidos', 'error');
-    }
-  };
-
-  const carregarItens = async () => {
-    try {
-      const response = await PedidoService.listarItens();
-      setItens(response.data);
-    } catch (error) {
-      showNotification('Erro ao carregar itens', 'error');
-    }
-  };
-
-  const carregarUnidadesMedida = async () => {
-    try {
-      const response = await PedidoService.listarUnidadesMedida();
-      setUnidadesMedida(response.data);
-    } catch (error) {
-      showNotification('Erro ao carregar unidades de medida', 'error');
-    }
-  };
-
-  const carregarFornecedores = async () => {
-    try {
-      const response = await PedidoService.listarFornecedores();
-      setFornecedores(response.data);
-    } catch (error) {
-      showNotification('Erro ao carregar fornecedores', 'error');
-    }
-  };
-
-  const handleStatusChange = async (pedidoId, novoStatus) => {
-    if (novoStatus === 'aprovado') {
-      await carregarFornecedores();
-      setFornecedorId('');
-      setStatusDialog({ open: true, pedidoId, novoStatus });
-      return;
-    }
-    if (novoStatus === 'rejeitado') {
-      setMotivoRejeicao('');
-      setStatusDialog({ open: true, pedidoId, novoStatus });
-      return;
-    }
-    // Para pendente/entregue, atualiza direto
-    try {
-      await PedidoService.atualizarPedido(pedidoId, { status: novoStatus });
-      await carregarPedidos();
-      showNotification('Status atualizado com sucesso!');
-    } catch (error) {
-      showNotification(error.response?.data?.error || 'Erro ao atualizar status', 'error');
-    }
-  };
-
-  const handleStatusDialogSubmit = async (e) => {
-    e.preventDefault();
-    const { pedidoId, novoStatus } = statusDialog;
-    let body = { status: novoStatus };
-    if (novoStatus === 'aprovado') {
-      if (!fornecedorId) {
-        showNotification('Selecione um fornecedor', 'error');
-        return;
+    const fetchUnidadesMedida = async () => {
+      try {
+        const res = await PedidoService.listarUnidadesMedida();
+        setUnidadesMedida(res.data);
+      } catch (err) {
+        console.error('Erro ao carregar unidades de medida');
       }
-      body.fornecedor_id = fornecedorId;
-    }
-    if (novoStatus === 'rejeitado') {
-      if (!motivoRejeicao.trim()) {
-        showNotification('Informe o motivo da rejeição', 'error');
-        return;
+    };
+    fetchUnidadesMedida();
+  }, []);
+
+  useEffect(() => {
+    const fetchPedidos = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await PedidoService.listarPedidos();
+        setPedidos(res.data);
+      } catch (err) {
+        setError(err?.response?.data?.message || err.message || 'Erro ao carregar pedidos');
+        console.error('Erro ao carregar pedidos');
+      } finally {
+        setLoading(false);
       }
-      body.motivo_rejeicao = motivoRejeicao.trim();
-    }
-    try {
-      await PedidoService.atualizarPedido(pedidoId, body);
-      await carregarPedidos();
-      showNotification('Status atualizado com sucesso!');
-      setStatusDialog({ open: false, pedidoId: null, novoStatus: '' });
-      setFornecedorId('');
-      setMotivoRejeicao('');
-    } catch (error) {
-      showNotification(error.response?.data?.error || 'Erro ao atualizar status', 'error');
-    }
-  };
+    };
+    fetchPedidos();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
     try {
-      if (modo === 'criar') {
-        await PedidoService.criarPedido(formData);
-        showNotification('Pedido criado com sucesso!');
+      const body = {
+        quantidade: novoPedido.quantidade,
+        observacoes: novoPedido.observacoes,
+        status: 'pendente'
+      };
+
+      // Se selecionou um item existente
+      if (novoPedido.itemId) {
+        body.item_id = novoPedido.itemId;
       } else {
-        await PedidoService.atualizarPedido(selectedPedido.id, formData);
-        showNotification('Pedido atualizado com sucesso!');
+        // Se está criando um item novo
+        body.item_nome = novoPedido.itemNome;
+        body.item_unidade_medida_id = novoPedido.unidadeMedidaId;
       }
-      setOpenForm(false);
-      carregarPedidos();
-      limparFormulario();
-    } catch (error) {
-      showNotification(error.response?.data?.message || 'Erro ao processar pedido', 'error');
+
+      await PedidoService.criarPedido(body);
+      setNovoPedido({ itemId: '', itemNome: '', quantidade: '', unidadeMedidaId: '', observacoes: '' });
+      const res = await PedidoService.listarPedidos();
+      setPedidos(res.data);
+    } catch (err) {
+      console.error('Erro ao enviar pedido');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const limparFormulario = () => {
-    setFormData({
-      item_id: '',
-      item_nome: '',
-      item_descricao: '',
-      quantidade: '',
-      item_unidade_medida_id: '',
-      observacoes: ''
-    });
-    setSelectedPedido(null);
+  const handleStatusChange = async (id, status) => {
+    try {
+      await PedidoService.atualizarPedido(id, { status });
+      const res = await PedidoService.listarPedidos();
+      setPedidos(res.data);
+    } catch (err) {
+      console.error('Erro ao atualizar status');
+    }
   };
 
-  const showNotification = (message, severity = 'success') => {
-    setNotification({ open: true, message, severity });
-  };
-
-  const handleCloseNotification = () => {
-    setNotification({ ...notification, open: false });
-  };
-
-  const getStatusColor = (status) => {
-    const colors = {
-      'pendente': '#ffa000',
-      'aprovado': '#2196f3',
-      'rejeitado': '#f44336',
-      'entregue': '#4caf50'
-    };
-    return colors[status] || '#757575';
-  };
-
-  const formatarData = (data) => {
-    if (!data) return '-';
-    return new Date(data).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+  const handleRejectClick = (pedidoId) => {
+    setModalRejeicao({
+      open: true,
+      pedidoId: pedidoId,
+      motivo: ''
     });
   };
 
-  // Filtro dos pedidos
-  const pedidosFiltrados = pedidos.filter(pedido => {
-    // Filtro por número (últimos 6 dígitos do id) ou nome do item
-    const numeroPedido = pedido.id.slice(-6).toUpperCase();
-    const nomeItem = (pedido.Item?.nome || pedido.item_nome || '').toLowerCase();
-    const buscaLower = busca.trim().toLowerCase();
-    const buscaOk =
-      !buscaLower ||
-      numeroPedido.includes(buscaLower.toUpperCase()) ||
-      nomeItem.includes(buscaLower);
-
-    // Filtro por período (intervalo de datas)
-    let buscaDataOk = true;
-    if (buscaPeriodo[0] && buscaPeriodo[1]) {
-      const dataPedido = pedido.data_pedido ? new Date(pedido.data_pedido) : null;
-      if (dataPedido) {
-        dataPedido.setHours(0, 0, 0, 0);
-        buscaDataOk =
-          dataPedido.getTime() >= buscaPeriodo[0].setHours(0, 0, 0, 0) &&
-          dataPedido.getTime() <= buscaPeriodo[1].setHours(0, 0, 0, 0);
-      } else {
-        buscaDataOk = false;
-      }
+  const handleRejectConfirm = async () => {
+    if (!modalRejeicao.motivo.trim()) {
+      console.error('Por favor, informe o motivo da rejeição');
+      return;
     }
 
-    // Filtro por status
-    const statusOk = statusFiltro === 'todos' || pedido.status === statusFiltro;
-
-    return buscaOk && buscaDataOk && statusOk;
-  });
-
-  const totalPaginas = Math.ceil(pedidosFiltrados.length / pedidosPorPagina);
-  const pedidosPaginados = pedidosFiltrados.slice((pagina - 1) * pedidosPorPagina, pagina * pedidosPorPagina);
-
-  // Funções rápidas para selecionar períodos
-  const handlePeriodoHoje = () => {
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    setBuscaPeriodo([hoje, hoje]);
-  };
-  const handlePeriodoSemana = () => {
-    const hoje = new Date();
-    const inicio = new Date(hoje);
-    inicio.setDate(hoje.getDate() - hoje.getDay());
-    inicio.setHours(0, 0, 0, 0);
-    const fim = new Date(inicio);
-    fim.setDate(inicio.getDate() + 6);
-    setBuscaPeriodo([inicio, fim]);
-  };
-  const handlePeriodoMes = () => {
-    const hoje = new Date();
-    const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-    const fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-    setBuscaPeriodo([inicio, fim]);
+    try {
+      await PedidoService.atualizarPedido(modalRejeicao.pedidoId, { 
+        status: 'rejeitado',
+        motivo_rejeicao: modalRejeicao.motivo.trim()
+      });
+      const res = await PedidoService.listarPedidos();
+      setPedidos(res.data);
+      setModalRejeicao({ open: false, pedidoId: null, motivo: '' });
+    } catch (err) {
+      console.error('Erro ao rejeitar pedido');
+    }
   };
 
-  // Função para detectar se é mobile
-  const isMobile = () => /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+  const handleRejectCancel = () => {
+    setModalRejeicao({ open: false, pedidoId: null, motivo: '' });
+  };
 
-  // Adicione o estado para controlar o pedido a ser excluído
-  const [pedidoParaExcluir, setPedidoParaExcluir] = useState(null);
-
-  // Função para excluir pedido
-  const handleDeletePedido = async (pedidoId) => {
+  const handleDeletePedido = async (id) => {
     if (!window.confirm('Tem certeza que deseja excluir este pedido?')) return;
     try {
-      await PedidoService.excluirPedido(pedidoId);
-      showNotification('Pedido excluído com sucesso!');
-      carregarPedidos();
-    } catch (error) {
-      showNotification(error.response?.data?.error || 'Erro ao excluir pedido', 'error');
+      await PedidoService.excluirPedido(id);
+      const res = await PedidoService.listarPedidos();
+      setPedidos(res.data);
+    } catch (err) {
+      console.error('Erro ao excluir pedido');
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('email');
+    localStorage.removeItem('rememberMe');
+    if (signOut) signOut();
+    window.location.href = '/login';
+  };
+
+  const handleSidebarNavigate = () => {
+    if (window.innerWidth <= 900) setSidebarOpen(false);
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100vh',
-      background: 'var(--dark-bg)'
-    }}>
-      <div style={{
-        display: 'flex',
-        flexDirection: 'row',
-        width: '100%',
-        minHeight: 0
-      }}>
-        {/* Botão de abrir menu lateral fixo em telas pequenas */}
-        {!sidebarOpen && (
-          <button
-            style={{
-              position: 'fixed',
-              top: 16,
-              left: 16,
-              zIndex: 3000,
-              background: '#132040',
-              border: 'none',
-              borderRadius: '50%',
-              width: 48,
-              height: 48,
-              color: '#00f2fa',
-              fontSize: 28,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 2px 8px #0008',
-              cursor: 'pointer'
-            }}
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Abrir menu"
-          >
-            <FaBars />
-          </button>
-        )}
-        {/* Sidebar responsivo */}
-        {sidebarOpen && (
-          <>
-            {/* Overlay para fechar menu ao clicar fora em telas pequenas */}
-            {window.innerWidth <= 900 && (
-              <div
-                style={{
-                  position: 'fixed',
-                  inset: 0,
-                  background: 'rgba(0,0,0,0.35)',
-                  zIndex: 199
-                }}
-                onClick={() => setSidebarOpen(false)}
-              />
-            )}
+    <div style={{ display: 'flex', flexDirection: 'row', minHeight: '100vh', background: 'var(--dark-bg)' }}>
+      {!sidebarOpen && (
+        <SidebarButton onClick={() => setSidebarOpen(true)} aria-label="Abrir menu">
+          <FaBars />
+        </SidebarButton>
+      )}
+      {sidebarOpen && (
+        <>
+          {window.innerWidth <= 900 && (
             <div
               style={{
-                minWidth: 250,
-                maxWidth: 300,
-                width: '100%',
-                transition: 'all 0.3s',
-                zIndex: 200,
-                background: '#132040',
-                position: window.innerWidth <= 900 ? 'fixed' : 'relative',
-                top: window.innerWidth <= 900 ? 0 : undefined,
-                left: window.innerWidth <= 900 ? 0 : undefined,
-                height: window.innerWidth <= 900 ? '100vh' : undefined,
-                boxShadow: window.innerWidth <= 900 ? '2px 0 16px #0008' : undefined
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0,0,0,0.35)',
+                zIndex: 199
               }}
-            >
-              {/* Botão de fechar menu lateral só em telas pequenas */}
-              <button
-                style={{
-                  position: 'absolute',
-                  top: 12,
-                  right: 12,
-                  background: 'none',
-                  border: 'none',
-                  color: '#00f2fa',
-                  fontSize: 28,
-                  display: window.innerWidth <= 900 ? 'flex' : 'none',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  zIndex: 3001
-                }}
-                onClick={() => setSidebarOpen(false)}
-                aria-label="Fechar menu"
-              >
-                <FaTimes />
-              </button>
-              <MenuSidebar onNavigate={handleSidebarNavigate} />
-            </div>
-          </>
-        )}
-        {/* Header ao lado do menu */}
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column'
-        }}>
-          <Header title="Pedidos" user={user} onLogout={signOut} />
-          <Container style={{
-            width: '100%',
-            marginLeft: sidebarOpen ? 0 : 0,
-            transition: 'margin 0.3s'
-          }}>
-            <Button
-              variant="contained"
-              onClick={() => {
-                setModo('criar');
-                limparFormulario();
-                setOpenForm(true);
-              }}
-              sx={{
-                mb: 2,
-                background: 'var(--gradient-blue)',
-                '&:hover': { opacity: 0.9 }
-              }}
-            >
-              Novo Pedido
-            </Button>
-
-            {/* Filtros de busca organizados */}
-            <FiltrosPadrao
-              busca={busca}
-              setBusca={setBusca}
-              buscaPeriodo={buscaPeriodo}
-              setBuscaPeriodo={setBuscaPeriodo}
-              statusFiltro={statusFiltro}
-              setStatusFiltro={setStatusFiltro}
-              exibirStatus={true}
-              onLimpar={() => {
-                setBusca('');
-                setBuscaPeriodo([null, null]);
-                setStatusFiltro('todos');
-              }}
-              onHoje={handlePeriodoHoje}
-              onSemana={handlePeriodoSemana}
-              onMes={handlePeriodoMes}
+              onClick={() => setSidebarOpen(false)}
             />
-            {/* Tabela de Pedidos */}
-            <TableContainer component={Paper} sx={{ backgroundColor: 'var(--dark-surface)' }}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ color: '#fff' }}>Nº</TableCell>
-                    <TableCell sx={{ color: '#fff' }}>Item</TableCell>
-                    <TableCell sx={{ color: '#fff' }}>Quantidade</TableCell>
-                    <TableCell sx={{ color: '#fff' }}>Data</TableCell>
-                    <TableCell sx={{ color: '#fff' }}>Status</TableCell>
-                    <TableCell sx={{ color: '#fff' }}>Ações</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {pedidosPaginados.map((pedido, idx) => {
-                    // Nome do item: se existir Item.nome, usa ele, senão usa item_nome
-                    const nomeItem = pedido.Item?.nome || pedido.item_nome || '-';
-                    // Unidade de medida: se existir unidade_medida.sigla, usa ela, senão usa vazio
-                    const siglaUnidade = pedido.unidade_medida?.sigla || '';
-                    // Novo número do pedido: últimos 6 dígitos do ID
-                    const numeroPedido = pedido.id.slice(-6).toUpperCase();
-                    return (
-                      <TableRow key={pedido.id}>
-                        <TableCell sx={{ color: '#fff' }}>{numeroPedido}</TableCell>
-                        <TableCell sx={{ color: '#fff' }}>{nomeItem}</TableCell>
-                        <TableCell sx={{ color: '#fff' }}>
-                          {pedido.quantidade} {siglaUnidade}
-                        </TableCell>
-                        <TableCell sx={{ color: '#fff' }}>{formatarData(pedido.data_pedido)}</TableCell>
-                        <TableCell>
-                          {user?.papel === 'admin' ? (
-                            <FormControl size="small" sx={{ minWidth: 120 }}>
-                              <Select
-                                value={pedido.status}
-                                onChange={(e) => handleStatusChange(pedido.id, e.target.value)}
-                                sx={{
-                                  color: getStatusColor(pedido.status),
-                                  '& .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: getStatusColor(pedido.status)
-                                  }
-                                }}
-                              >
-                                <MenuItem value="pendente">Pendente</MenuItem>
-                                <MenuItem value="aprovado">Aprovado</MenuItem>
-                                <MenuItem value="rejeitado">Rejeitado</MenuItem>
-                                <MenuItem value="entregue">Entregue</MenuItem>
-                              </Select>
-                            </FormControl>
-                          ) : (
-                            <span style={{ color: getStatusColor(pedido.status), fontWeight: 600 }}>
-                              {pedido.status.charAt(0).toUpperCase() + pedido.status.slice(1)}
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <IconButton 
-                            onClick={async () => {
-                              setSelectedPedido(pedido);
-                              setModo('editar');
-                              setOpenForm(true);
+          )}
+          <SidebarContainer isMobile={window.innerWidth <= 900}>
+            <CloseSidebarButton isMobile={window.innerWidth <= 900} onClick={() => setSidebarOpen(false)} aria-label="Fechar menu">
+              <FaTimes />
+            </CloseSidebarButton>
+            <MenuSidebar onNavigate={handleSidebarNavigate} />
+          </SidebarContainer>
+        </>
+      )}
+      <MainContainer>
+        <HeaderComponent title="Pedidos" user={user} onLogout={handleLogout} />
+        <div style={{ width: '100%', maxWidth: 1200, margin: '32px auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
+          {error && <div style={{ color: 'red', marginBottom: 12 }}>{error}</div>}
+          <FiltrosPadrao
+            busca={busca}
+            setBusca={setBusca}
+            buscaPeriodo={buscaPeriodo}
+            setBuscaPeriodo={setBuscaPeriodo}
+            exibirStatus={true}
+            onLimpar={() => {
+              setBusca('');
+              setBuscaPeriodo([null, null]);
+            }}
+            onHoje={() => {
+              const hoje = new Date();
+              hoje.setHours(0, 0, 0, 0);
+              setBuscaPeriodo([hoje, hoje]);
+            }}
+            onSemana={() => {
+              const hoje = new Date();
+              const inicio = new Date(hoje);
+              inicio.setDate(hoje.getDate() - hoje.getDay());
+              inicio.setHours(0, 0, 0, 0);
+              const fim = new Date(inicio);
+              fim.setDate(inicio.getDate() + 6);
+              setBuscaPeriodo([inicio, fim]);
+            }}
+            onMes={() => {
+              const hoje = new Date();
+              const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+              const fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+              setBuscaPeriodo([inicio, fim]);
+            }}
+            resetPagina={() => setPagina(1)} // Reseta a página ao aplicar filtros
+          />
+          <NewRequestContainer>
+            <RequestTitle>Novo Pedido</RequestTitle>
+            <RequestForm onSubmit={handleSubmit}>
+              <Label>
+                Item Existente
+                <Select
+                  value={novoPedido.itemId}
+                  onChange={e => {
+                    setNovoPedido({ 
+                      ...novoPedido, 
+                      itemId: e.target.value,
+                      itemNome: e.target.value ? '' : novoPedido.itemNome
+                    });
+                  }}
+                >
+                  <option value="">Selecione um item existente (opcional)</option>
+                  {itens.map(item => (
+                    <option key={item.id} value={item.id}>
+                      {item.nome}
+                    </option>
+                  ))}
+                </Select>
+              </Label>
+
+              <OrDivider>
+                <span>ou</span>
+              </OrDivider>
+
+              <Label>
+                Nome do Item Novo
+                <Input
+                  type="text"
+                  value={novoPedido.itemNome}
+                  onChange={e => {
+                    setNovoPedido({ 
+                      ...novoPedido, 
+                      itemNome: e.target.value,
+                      itemId: e.target.value ? '' : novoPedido.itemId
+                    });
+                  }}
+                  placeholder="Digite o nome de um item novo"
+                  disabled={!!novoPedido.itemId}
+                />
+              </Label>
+
+              <Label>
+                Unidade de Medida
+                <Select
+                  value={novoPedido.unidadeMedidaId}
+                  onChange={e => setNovoPedido({ ...novoPedido, unidadeMedidaId: e.target.value })}
+                  required={!!novoPedido.itemNome && !novoPedido.itemId}
+                  disabled={!!novoPedido.itemId}
+                >
+                  <option value="">Selecione uma unidade</option>
+                  {unidadesMedida.map(unidade => (
+                    <option key={unidade.id} value={unidade.id}>
+                      {unidade.nome} ({unidade.sigla})
+                    </option>
+                  ))}
+                </Select>
+              </Label>
+
+              <Label>
+                Quantidade
+                <Input
+                  type="number"
+                  min={1}
+                  value={novoPedido.quantidade}
+                  onChange={e => setNovoPedido({ ...novoPedido, quantidade: e.target.value })}
+                  required
+                  placeholder="Digite a quantidade"
+                />
+              </Label>
+
+              <FullWidthField>
+                <Label>
+                  Observações
+                  <Input
+                    type="text"
+                    value={novoPedido.observacoes}
+                    onChange={e => setNovoPedido({ ...novoPedido, observacoes: e.target.value })}
+                    placeholder="Observações opcionais sobre o pedido"
+                  />
+                </Label>
+              </FullWidthField>
+
+              <ButtonContainer>
+                <Button 
+                  type="submit" 
+                  disabled={submitting || (!novoPedido.itemId && !novoPedido.itemNome)}
+                >
+                  {submitting ? 'Enviando...' : 'Solicitar Pedido'}
+                </Button>
+              </ButtonContainer>
+            </RequestForm>
+          </NewRequestContainer>
+          <RequestListTitle>Pedidos já realizados</RequestListTitle>
+          <RequestList style={{ width: '100%', justifyContent: 'center' }}>
+            {loading ? (
+              <div style={{ color: '#eaf6fb', padding: 24, gridColumn: '1/-1', textAlign: 'center' }}>Carregando...</div>
+            ) : pedidosPaginados.length === 0 ? (
+              <div style={{ color: '#eaf6fb', padding: 24, gridColumn: '1/-1', textAlign: 'center' }}>Nenhum pedido encontrado.</div>
+            ) : (
+              pedidosPaginados.map((pedido, idx) => {
+                const itemNome = itens.find(i => i.id === pedido.item_id)?.nome || pedido.item_nome || pedido.item_id;
+                const unidadeSigla = unidadesMedida.find(u => u.id === pedido.item_unidade_medida_id)?.sigla || '';
+                return (
+                  <RequestItem key={pedido.id}>
+                    <div style={{ flex: 1, width: '100%' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+                        {user?.papel === 'admin' ? (
+                          <Select
+                            value={pedido.status}
+                            onChange={(e) => {
+                              if (e.target.value === 'rejeitado') {
+                                handleRejectClick(pedido.id);
+                              } else {
+                                handleStatusChange(pedido.id, e.target.value);
+                              }
                             }}
-                            sx={{ color: '#00f2fa' }}
-                          >
-                            <FaEdit />
-                          </IconButton>
-                          <IconButton 
-                            onClick={() => {
-                              setSelectedPedido(pedido);
-                              setOpenDetails(true);
+                            style={{
+                              backgroundColor: statusColors[pedido.status],
+                              color: '#fff',
+                              fontWeight: 'bold',
+                              border: `2px solid ${statusColors[pedido.status]}`,
+                              borderRadius: '12px',
+                              padding: '4px 12px',
+                              marginRight: '10px',
+                              fontSize: '0.95em',
+                              minWidth: '120px'
                             }}
-                            sx={{ color: '#fff' }}
                           >
-                            <FaEye />
-                          </IconButton>
-                          {/* Só admin pode enviar no WhatsApp e só se não for rejeitado nem pendente */}
-                          {user?.papel === 'admin' && pedido.status !== 'rejeitado' && pedido.status !== 'pendente' && (
-                            <IconButton
-                              onClick={async () => {
-                                // Novo número do pedido: últimos 6 dígitos do ID
-                                const numeroPedido = pedido.id.slice(-6).toUpperCase();
-                                const solicitante = user?.nome || 'Solicitante';
-                                const unidade = pedido.unidade_medida?.nome || '';
-                                const observacao = pedido.observacoes || '-';
-
-                                let telefone = '';
-                                let fornecedorId = pedido.Fornecedor?.id || pedido.fornecedor_id;
-
-                                // Tenta pegar do objeto Fornecedor do pedido
-                                if (pedido.Fornecedor && typeof pedido.Fornecedor.telefone === 'string') {
-                                  telefone = pedido.Fornecedor.telefone.replace(/\D/g, '');
-                                }
-                                // Se não, tenta pegar do array de fornecedores carregado (usado no Select)
-                                else if (fornecedorId) {
-                                  const fornecedorObj = fornecedores.find(f => f.id === fornecedorId);
-                                  if (fornecedorObj && fornecedorObj.telefone) {
-                                    telefone = fornecedorObj.telefone.replace(/\D/g, '');
-                                  }
-                                }
-
-                                // Adicione este log para depuração:
-                                console.log('FornecedorId:', fornecedorId, 'Telefone extraído:', telefone);
-
-                                if (!telefone) {
-                                  showNotification('Telefone do fornecedor não disponível. Atualize o cadastro do fornecedor.', 'error');
-                                  return;
-                                }
-
-                                // Ajuste: Remover o 9 após o DDD se o número tiver 9 dígitos e começar com 9
-                                // Exemplo: +55 (51) 997756708 => 5551997756708
-                                // Para WhatsApp: 5551977756708 (remove o 9 após o DDD)
-                                let telefoneWhatsapp = telefone;
-                                if (telefoneWhatsapp.length === 13 && telefoneWhatsapp.startsWith('55')) {
-                                  // 55 + DDD(2) + 9 + número(8)
-                                  telefoneWhatsapp = telefoneWhatsapp.slice(0, 4) + telefoneWhatsapp.slice(5);
-                                }
-
-                                const mensagem = 
-`🔔 *Solicitação de Pedido* 🔔
-
-Olá! Esperamos que esteja bem. Seguem os detalhes do novo pedido para seu atendimento:
-
-📝 *Número do Pedido:* ${numeroPedido}
-📦 *Item:* ${nomeItem}
-🔢 *Quantidade:* ${pedido.quantidade}
-📏 *Unidade:* ${unidade}
-🗒️ *Observações:* ${observacao}
-
-👤 *Solicitante:* ${solicitante}
-
-📍 *Endereço para entrega:*
-R. Arno Wickert, 44 - Industrial, Dois Irmãos - RS, 93950-000
-https://maps.app.goo.gl/cPVRLrGF4vZkxEqh7
-
-Agradecemos pela parceria e aguardamos a confirmação do recebimento deste pedido. Qualquer dúvida, estamos à disposição! 🤝
-
-Atenciosamente,
-Equipe ⚪ Contole Estoque 🔵
-
-> Feito por _RedBlack_
-`;
-                                // Detecta se é mobile ou desktop e monta o link correto
-                                const link = isMobile()
-                                  ? `https://api.whatsapp.com/send?phone=${telefoneWhatsapp}&text=${encodeURIComponent(mensagem)}`
-                                  : `https://web.whatsapp.com/send?phone=${telefoneWhatsapp}&text=${encodeURIComponent(mensagem)}`;
-                                window.open(link);
-                              }}
-                              sx={{ color: '#25D366' }}
-                            >
-                              <FaWhatsapp />
-                            </IconButton>
-                          )}
-                          {/* Botão de excluir para admin */}
-                          {user?.papel === 'admin' && (
-                            <IconButton
-                              onClick={() => handleDeletePedido(pedido.id)}
-                              sx={{ color: '#f44336' }}
-                              title="Excluir pedido"
-                            >
-                              <FaTimes />
-                            </IconButton>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-              {/* Paginação */}
-              {totalPaginas > 1 && (
-                <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>
-                  <button className="paginacao-btn" onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}>Anterior</button>
-                  <span style={{ margin: '0 12px', color: '#00eaff' }}>
-                    Página {pagina} de {totalPaginas}
-                  </span>
-                  <button className="paginacao-btn" onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}>Próxima</button>
-                </div>
-              )}
-            </TableContainer>
-
-            {/* Dialog do Formulário */}
-            <Dialog 
-              open={openForm} 
-              onClose={() => setOpenForm(false)}
-              maxWidth="md"
-              fullWidth
-            >
-              <FormWrapper>
-                <FormContainer onSubmit={handleSubmit}>
-                  <h2>{modo === 'criar' ? 'Novo Pedido' : 'Editar Pedido'}</h2>
-                  
-                  <FormControl fullWidth margin="normal">
-                    <InputLabel sx={{ color: '#fff' }}>Item</InputLabel>
-                    <Select
-                      value={formData.item_id}
-                      onChange={(e) => {
-                        const item = itens.find(i => i.id === e.target.value);
-                        setFormData({
-                          ...formData,
-                          item_id: e.target.value,
-                          item_nome: item?.nome || '',
-                          item_unidade_medida_id: item?.unidade_medida_id || ''
-                        });
-                      }}
-                      sx={{ color: '#fff' }}
-                    >
-                      {itens.map(item => (
-                        <MenuItem key={item.id} value={item.id}>
-                          {item.nome}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-
-                  <TextField
-                    label="Nome do Item"
-                    value={formData.item_nome}
-                    onChange={(e) => setFormData({ ...formData, item_nome: e.target.value })}
-                    fullWidth
-                    margin="normal"
-                    sx={{ input: { color: '#ffffff' }, label: { color: '#fff' } }}
-                    disabled={!!formData.item_id}
-                  />
-
-                  <TextField
-                    label="Quantidade"
-                    type="number"
-                    value={formData.quantidade}
-                    onChange={(e) => setFormData({ ...formData, quantidade: e.target.value })}
-                    fullWidth
-                    margin="normal"
-                    sx={{ input: { color: '#fff' }, label: { color: '#fff' } }}
-                  />
-
-                  <FormControl fullWidth margin="normal">
-                    <InputLabel sx={{ color: '#fff' }}>Unidade de Medida</InputLabel>
-                    <Select
-                      value={formData.item_unidade_medida_id}
-                      onChange={(e) => setFormData({ ...formData, item_unidade_medida_id: e.target.value })}
-                      sx={{ color: '#fff' }}
-                    >
-                      {unidadesMedida.map(unidade => (
-                        <MenuItem key={unidade.id} value={unidade.id}>
-                          {unidade.nome} ({unidade.sigla})
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-
-                  <TextField
-                    label="Observações"
-                    multiline
-                    rows={4}
-                    value={formData.observacoes}
-                    onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-                    fullWidth
-                    margin="normal"
-                    sx={{ input: { color: '#fff' }, label: { color: '#fff' } }}
-                  />
-
-                  <ButtonContainer>
-                    <Button type="submit" variant="contained" color="primary">
-                      {modo === 'criar' ? 'Criar Pedido' : 'Salvar Alterações'}
-                    </Button>
-                    <Button variant="outlined" onClick={() => setOpenForm(false)}>
-                      Cancelar
-                    </Button>
-                  </ButtonContainer>
-                </FormContainer>
-              </FormWrapper>
-            </Dialog>
-
-            {/* Dialog de Detalhes */}
-            <Dialog 
-              open={openDetails} 
-              onClose={() => setOpenDetails(false)}
-              maxWidth="md"
-              fullWidth
-            >
-              {selectedPedido && (
-                <DetailsContainer>
-                  <DetailsHeader>
-                    Detalhes do Pedido #{selectedPedido.id.substring(0, 8)}
-                  </DetailsHeader>
-
-
-                  <DetailsRow>
-                    <DetailsLabel>Item:</DetailsLabel>
-                    <DetailsValue>
-                      {selectedPedido.Item?.nome || selectedPedido.item_nome || '-'}
-                    </DetailsValue>
-                  </DetailsRow>
-
-                  <DetailsRow>
-                    <DetailsLabel>Descrição do Item:</DetailsLabel>
-                    <DetailsValue>
-                      {selectedPedido.Item?.descricao || selectedPedido.item_descricao || '-'}
-                    </DetailsValue>
-                  </DetailsRow>
-
-                  <DetailsRow>
-                    <DetailsLabel>Quantidade:</DetailsLabel>
-                    <DetailsValue>
-                      {selectedPedido.quantidade} {selectedPedido.unidade_medida?.sigla || ''}
-                    </DetailsValue>
-                  </DetailsRow>
-
-                  <DetailsRow>
-                    <DetailsLabel>Unidade de Medida:</DetailsLabel>
-                    <DetailsValue>
-                      {selectedPedido.unidade_medida?.nome
-                        ? `${selectedPedido.unidade_medida.nome} (${selectedPedido.unidade_medida.sigla})`
-                        : '-'}
-                    </DetailsValue>
-                  </DetailsRow>
-
-                  <DetailsRow>
-                    <DetailsLabel>Status:</DetailsLabel>
-                    <DetailsValue>{selectedPedido.status}</DetailsValue>
-                  </DetailsRow>
-
-                  <DetailsRow>
-                    <DetailsLabel>Motivo da Rejeição:</DetailsLabel>
-                    <DetailsValue>{selectedPedido.motivo_rejeicao || '-'}</DetailsValue>
-                  </DetailsRow>
-
-                  <DetailsRow>
-                    <DetailsLabel>Data do Pedido:</DetailsLabel>
-                    <DetailsValue>{formatarData(selectedPedido.data_pedido)}</DetailsValue>
-                  </DetailsRow>
-
-                  <DetailsRow>
-                    <DetailsLabel>Observações:</DetailsLabel>
-                    <DetailsValue>{selectedPedido.observacoes || '-'}</DetailsValue>
-                  </DetailsRow>
-
-                  <DetailsRow>
-                    <DetailsLabel>Fornecedor:</DetailsLabel>
-                    <DetailsValue>
-                      {selectedPedido.Fornecedor?.nome ||
-                        selectedPedido.fornecedor?.nome ||
-                        selectedPedido.fornecedor_nome ||
-                        '-'}
-                    </DetailsValue>
-                  </DetailsRow>
-
-                  
-
-                  <ButtonContainer>
-                    <Button 
-                      variant="contained" 
-                      onClick={() => setOpenDetails(false)}
-                      startIcon={<FaWindowClose />}
-                    >
-                      Fechar
-                    </Button>
-                  </ButtonContainer>
-                </DetailsContainer>
-              )}
-            </Dialog>
-
-            {/* Dialog para status aprovado/rejeitado */}
-            <Dialog
-              open={statusDialog.open}
-              onClose={() => setStatusDialog({ open: false, pedidoId: null, novoStatus: '' })}
-              maxWidth="xs"
-              fullWidth
-            >
-              <FormWrapper>
-                <form onSubmit={handleStatusDialogSubmit}>
-                  <h3>
-                    {statusDialog.novoStatus === 'aprovado'
-                      ? 'Aprovar Pedido'
-                      : 'Rejeitar Pedido'}
-                  </h3>
-                  {statusDialog.novoStatus === 'aprovado' && (
-                    <FormControl fullWidth margin="normal">
-                      <InputLabel sx={{ color: '#fff' }}>Fornecedor</InputLabel>
-                      <Select
-                        value={fornecedorId}
-                        onChange={e => setFornecedorId(e.target.value)}
-                        sx={{ color: '#fff' }}
-                        required
-                      >
-                        {fornecedores.map(f => (
-                          <MenuItem key={f.id} value={f.id}>
-                            {f.nome} {f.telefone ? `- ${f.telefone}` : ''}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  )}
-                  {statusDialog.novoStatus === 'rejeitado' && (
-                    <TextField
-                      label="Motivo da Rejeição"
-                      value={motivoRejeicao}
-                      onChange={e => setMotivoRejeicao(e.target.value)}
-                      fullWidth
-                      margin="normal"
-                      required
-                      sx={{ input: { color: '#fff' }, label: { color: '#fff' } }}
-                    />
-                  )}
-                  <ButtonContainer>
-                    <Button type="submit" variant="contained" color="primary">
-                      Confirmar
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      onClick={() => setStatusDialog({ open: false, pedidoId: null, novoStatus: '' })}
-                    >
-                      Cancelar
-                    </Button>
-                  </ButtonContainer>
-                </form>
-              </FormWrapper>
-            </Dialog>
-
-            {/* Notificações */}
-            <Snackbar
-              open={notification.open}
-              autoHideDuration={6000}
-              onClose={handleCloseNotification}
-              anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-            >
-              <Alert
-                onClose={handleCloseNotification}
-                severity={notification.severity}
-                sx={{ width: '100%' }}
-              >
-                {notification.message}
-              </Alert>
-            </Snackbar>
-          </Container>
+                            <option value="pendente">Pendente</option>
+                            <option value="aprovado">Aprovado</option>
+                            <option value="rejeitado">Rejeitado</option>
+                            <option value="entregue">Entregue</option>
+                          </Select>
+                        ) : (
+                          <RequestItemStatus statusColor={statusColors[pedido.status]}>
+                            {statusLabels[pedido.status] || pedido.status}
+                          </RequestItemStatus>
+                        )}
+                        <span style={{ color: '#00eaff', fontWeight: 600, fontSize: 16 }}>
+                          #{(pedido.id || '').slice(-6).toUpperCase()}
+                        </span>
+                      </div>
+                      <div style={{ marginBottom: 2, fontSize: 15 }}>
+                        <strong>Item:</strong> {itemNome}
+                      </div>
+                      <div style={{ marginBottom: 2, fontSize: 15 }}>
+                        <strong>Qtd:</strong> {pedido.quantidade} {unidadeSigla}
+                      </div>
+                      {pedido.motivo_rejeicao && (
+                        <div style={{ marginBottom: 2, fontSize: 14, color: '#ff6b6b' }}>
+                          <strong>Motivo:</strong> {pedido.motivo_rejeicao}
+                        </div>
+                      )}
+                      {pedido.observacoes && (
+                        <div style={{ marginBottom: 2, fontSize: 14, color: '#b2bac2' }}>
+                          <strong>Obs:</strong> {pedido.observacoes}
+                        </div>
+                      )}
+                    </div>
+                    <RequestItemActions>
+                      <ActionButton bgColor="#c91407" onClick={() => handleDeletePedido(pedido.id)} title="Excluir pedido">
+                        Excluir
+                      </ActionButton>
+                    </RequestItemActions>
+                  </RequestItem>
+                );
+              })
+            )}
+            <Paginacao
+              pagina={pagina}
+              totalPaginas={totalPaginas}
+              onPaginaAnterior={() => setPagina(p => Math.max(1, p - 1))}
+              onPaginaProxima={() => setPagina(p => Math.min(totalPaginas, p + 1))}
+            />
+          </RequestList>
         </div>
-      </div>
+      </MainContainer>
+
+      {/* Modal de Rejeição */}
+      {modalRejeicao.open && (
+        <ModalOverlay onClick={handleRejectCancel}>
+          <ModalContent onClick={e => e.stopPropagation()}>
+            <ModalTitle>Rejeitar Pedido</ModalTitle>
+            <Label>
+              Motivo da Rejeição *
+              <TextArea
+                value={modalRejeicao.motivo}
+                onChange={e => setModalRejeicao({ ...modalRejeicao, motivo: e.target.value })}
+                placeholder="Informe o motivo da rejeição do pedido..."
+                required
+              />
+            </Label>
+            <ModalButtonContainer>
+              <ModalButton 
+                variant="secondary" 
+                onClick={handleRejectCancel}
+              >
+                Cancelar
+              </ModalButton>
+              <ModalButton 
+                variant="danger" 
+                onClick={handleRejectConfirm}
+                disabled={!modalRejeicao.motivo.trim()}
+              >
+                Rejeitar Pedido
+              </ModalButton>
+            </ModalButtonContainer>
+          </ModalContent>
+        </ModalOverlay>
+      )}
     </div>
   );
 };

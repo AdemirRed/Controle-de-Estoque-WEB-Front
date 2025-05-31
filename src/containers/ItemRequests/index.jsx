@@ -4,6 +4,8 @@ import { FaBars, FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import HeaderComponent from '../../components/Header';
 import MenuSidebar from '../../components/MenuSidebar';
+import Paginacao from '../../components/Paginacao';
+import FiltrosPadrao from '../../components/FiltrosPadrao'; // Importação do componente FiltrosPadrao
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import {
@@ -12,7 +14,19 @@ import {
   Label,
   RequestForm,
   RequestItem,
-  RequestList
+  RequestList,
+  SidebarButton,
+  SidebarContainer,
+  CloseSidebarButton,
+  MainContainer,
+  NewRequestContainer,
+  RequestTitle,
+  RequestListTitle,
+  RequestItemStatus,
+  RequestItemActions,
+  ActionButton,
+  FullWidthField,
+  ButtonContainer
 } from './styles';
 
 const statusLabels = {
@@ -28,42 +42,6 @@ const statusColors = {
   rejeitado: '#c91407',
   cancelado: '#757575'
 };
-
-function showBrowserNotification(title, body) {
-  if ('Notification' in window && Notification.permission === 'granted') {
-    try {
-      // Alguns navegadores não permitem o uso direto do construtor Notification
-      new window.Notification(title, { body });
-    } catch (err) {
-      // Fallback: apenas exibe um toast
-      toast.info(`${title} - ${body}`);
-    }
-  }
-}
-
-// Função global para buscar requisições pendentes e notificar
-function startItemRequestsPolling(user) {
-  let lastPendingCount = 0;
-  setInterval(async () => {
-    try {
-      if (!user || user.papel !== 'admin') return;
-      const res = await api.get('/item-requests');
-      const requests = res.data || [];
-      const pendentes = requests.filter(r => r.status === 'pendente');
-      if (pendentes.length > lastPendingCount) {
-        if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification(
-            'Nova requisição pendente!',
-            { body: `Você tem ${pendentes.length} requisição(ões) pendente(s) para aprovar.` }
-          );
-        }
-      }
-      lastPendingCount = pendentes.length;
-    } catch (error) {
-      // Silencie erros de polling
-    }
-  }, 180000); // 3 minutos
-}
 
 const ItemRequests = () => {
   const { user, signOut } = useAuth();
@@ -81,7 +59,13 @@ const ItemRequests = () => {
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
   const [usuarios, setUsuarios] = useState([]); // Para admin selecionar usuário
   const [usuariosCache, setUsuariosCache] = useState({}); // Cache para nomes buscados por id
-  const [lastPendingCount, setLastPendingCount] = useState(0);
+
+  // Modal de rejeição
+  const [modalRejeicao, setModalRejeicao] = useState({
+    open: false,
+    requisicaoId: null,
+    motivo: ''
+  });
 
   // Paginação
   const [pagina, setPagina] = useState(1);
@@ -89,11 +73,13 @@ const ItemRequests = () => {
   const totalPaginas = Math.ceil(requests.length / requestsPorPagina);
   const requestsPaginados = requests.slice((pagina - 1) * requestsPorPagina, pagina * requestsPorPagina);
 
+  const [busca, setBusca] = useState(''); // Estado para busca
+  const [buscaPeriodo, setBuscaPeriodo] = useState([null, null]); // Estado para período de busca
+
   React.useEffect(() => {
     const handleResize = () => setSidebarOpen(window.innerWidth > 900);
     window.addEventListener('resize', handleResize);
-
-    // Removido: lógica de permissão de notificação duplicada
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
@@ -137,29 +123,6 @@ const ItemRequests = () => {
     fetchRequests();
   }, [user]);
 
-  useEffect(() => {
-    // Sempre que requests mudar, verifica se há novas pendentes (apenas admin)
-    if (user?.papel === 'admin') {
-      const pendentes = requests.filter(r => r.status === 'pendente');
-      if (pendentes.length > lastPendingCount) {
-        showBrowserNotification(
-          'Nova requisição pendente!',
-          `Você tem ${pendentes.length} requisição(ões) pendente(s) para aprovar.`
-        );
-      }
-      setLastPendingCount(pendentes.length);
-    }
-  }, [requests, user]); // Executa sempre que requests mudar
-
-  useEffect(() => {
-    // Inicia o polling global apenas uma vez e só para admin
-    if (user?.papel === 'admin' && window.__itemRequestsPollingStarted !== true) {
-      window.__itemRequestsPollingStarted = true;
-      startItemRequestsPolling(user);
-    }
-    // ...existing code...
-  }, [user]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -201,10 +164,6 @@ const ItemRequests = () => {
       console.log('Enviando requisição:', body);
       await api.post('/item-requests', body);
       toast.success('Requisição enviada!');
-      showBrowserNotification(
-        'Requisição enviada!',
-        'Sua requisição foi registrada com sucesso.'
-      );
       setNovoItem({ itemId: '', quantidade: '', observacao: '', usuarioId: '' });
       const res = await api.get(user?.papel === 'admin' ? '/item-requests' : '/item-requests/minhas');
       setRequests(res.data);
@@ -339,6 +298,39 @@ const ItemRequests = () => {
     }
   };
 
+  const handleRejectClick = (requisicaoId) => {
+    setModalRejeicao({
+      open: true,
+      requisicaoId: requisicaoId,
+      motivo: ''
+    });
+  };
+
+  const handleRejectConfirm = async () => {
+    if (!modalRejeicao.motivo.trim()) {
+      toast.error('Por favor, informe o motivo da rejeição');
+      return;
+    }
+
+    try {
+      await api.put(`/item-requests/${modalRejeicao.requisicaoId}`, { 
+        status: 'rejeitado',
+        motivo_rejeicao: modalRejeicao.motivo.trim()
+      });
+      toast.success('Requisição rejeitada!');
+      const url = user?.papel === 'admin' ? '/item-requests' : '/item-requests/minhas';
+      const res = await api.get(url);
+      setRequests(res.data);
+      setModalRejeicao({ open: false, requisicaoId: null, motivo: '' });
+    } catch (err) {
+      toast.error('Erro ao rejeitar requisição');
+    }
+  };
+
+  const handleRejectCancel = () => {
+    setModalRejeicao({ open: false, requisicaoId: null, motivo: '' });
+  };
+
   const handleCancel = async (req) => {
     // Cancelar: entrada no estoque e status cancelado
     try {
@@ -379,37 +371,11 @@ const ItemRequests = () => {
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'row',
-      minHeight: '100vh',
-      background: 'var(--dark-bg)'
-    }}>
+    <div style={{ display: 'flex', flexDirection: 'row', minHeight: '100vh', background: 'var(--dark-bg)' }}>
       {!sidebarOpen && (
-        <button
-          style={{
-            position: 'fixed',
-            top: 16,
-            left: 16,
-            zIndex: 3000,
-            background: '#232a36',
-            border: 'none',
-            borderRadius: '50%',
-            width: 48,
-            height: 48,
-            color: '#00eaff',
-            fontSize: 28,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 2px 8px #0008',
-            cursor: 'pointer'
-          }}
-          onClick={() => setSidebarOpen(true)}
-          aria-label="Abrir menu"
-        >
+        <SidebarButton onClick={() => setSidebarOpen(true)} aria-label="Abrir menu">
           <FaBars />
-        </button>
+        </SidebarButton>
       )}
       {sidebarOpen && (
         <>
@@ -424,88 +390,58 @@ const ItemRequests = () => {
               onClick={() => setSidebarOpen(false)}
             />
           )}
-          <div
-            style={{
-              minWidth: 250,
-              maxWidth: 300,
-              width: '100%',
-              transition: 'all 0.3s',
-              zIndex: 200,
-              background: '#232a36',
-              position: window.innerWidth <= 900 ? 'fixed' : 'relative',
-              top: window.innerWidth <= 900 ? 0 : undefined,
-              left: window.innerWidth <= 900 ? 0 : undefined,
-              height: window.innerWidth <= 900 ? '100vh' : undefined,
-              boxShadow: window.innerWidth <= 900 ? '2px 0 16px #0008' : undefined
-            }}
-          >
-            <button
-              style={{
-                position: 'absolute',
-                top: 12,
-                right: 12,
-                background: 'none',
-                border: 'none',
-                color: '#00eaff',
-                fontSize: 28,
-                display: window.innerWidth <= 900 ? 'flex' : 'none',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                zIndex: 3001
-              }}
+          <SidebarContainer $isMobile={window.innerWidth <= 900}>
+            <CloseSidebarButton 
+              $isMobile={window.innerWidth <= 900}
               onClick={() => setSidebarOpen(false)}
               aria-label="Fechar menu"
             >
               <FaTimes />
-            </button>
+            </CloseSidebarButton>
             <MenuSidebar onNavigate={handleSidebarNavigate} />
-          </div>
+          </SidebarContainer>
         </>
       )}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh',
-        width: '100%',
-        padding: 0,
-      }}>
+      <MainContainer>
         <HeaderComponent title="Requisições de Itens" user={user} onLogout={handleLogout} />
-        <div
-          style={{
-            width: '100%',
-            maxWidth: 1200,
-            margin: '32px auto',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 0,
-          }}
-        >
-          {error && (
-            <div style={{ color: 'red', marginBottom: 12 }}>
-              {error}
-            </div>
-          )}
+        <div style={{ width: '100%', maxWidth: 1200, margin: '32px auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
+          {error && <div style={{ color: 'red', marginBottom: 12 }}>{error}</div>}
+          <FiltrosPadrao
+            busca={busca}
+            setBusca={setBusca}
+            buscaPeriodo={buscaPeriodo}
+            setBuscaPeriodo={setBuscaPeriodo}
+            exibirStatus={false}
+            onLimpar={() => {
+              setBusca('');
+              setBuscaPeriodo([null, null]);
+            }}
+            onHoje={() => {
+              const hoje = new Date();
+              hoje.setHours(0, 0, 0, 0);
+              setBuscaPeriodo([hoje, hoje]);
+            }}
+            onSemana={() => {
+              const hoje = new Date();
+              const inicio = new Date(hoje);
+              inicio.setDate(hoje.getDate() - hoje.getDay());
+              inicio.setHours(0, 0, 0, 0);
+              const fim = new Date(inicio);
+              fim.setDate(inicio.getDate() + 6);
+              setBuscaPeriodo([inicio, fim]);
+            }}
+            onMes={() => {
+              const hoje = new Date();
+              const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+              const fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+              setBuscaPeriodo([inicio, fim]);
+            }}
+            resetPagina={() => setPagina(1)} // Reseta a página ao aplicar filtros
+          />
           {(user?.papel !== 'admin' || user?.papel === 'admin') && (
-            <div style={{
-              background: '#132040',
-              padding: 24,
-              borderRadius: 12,
-              boxShadow: '0 4px 32px 0 rgba(0,0,0,0.25)',
-              marginBottom: 32,
-              maxWidth: 600,
-              width: '100%',
-              marginLeft: 'auto',
-              marginRight: 'auto',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center'
-            }}>
-              <h2 style={{ color: '#00eaff', marginBottom: 18, textAlign: 'center' }}>Nova Requisição</h2>
-              <RequestForm onSubmit={handleSubmit} style={{ width: '100%', justifyContent: 'center' }}>
+            <NewRequestContainer>
+              <RequestTitle>Nova Requisição</RequestTitle>
+              <RequestForm onSubmit={handleSubmit}>
                 <Label>
                   Item
                   <select
@@ -517,8 +453,10 @@ const ItemRequests = () => {
                       color: '#eaf6fb',
                       border: '1px solid #00eaff44',
                       borderRadius: 6,
-                      padding: '6px 10px',
-                      marginLeft: 8
+                      padding: '8px 12px',
+                      marginTop: 2,
+                      width: '100%',
+                      boxSizing: 'border-box'
                     }}
                   >
                     <option value="">Selecione um item</option>
@@ -529,6 +467,7 @@ const ItemRequests = () => {
                     ))}
                   </select>
                 </Label>
+
                 <Label>
                   Quantidade
                   <Input
@@ -543,17 +482,10 @@ const ItemRequests = () => {
                     value={novoItem.quantidade}
                     onChange={e => setNovoItem({ ...novoItem, quantidade: e.target.value })}
                     required
+                    placeholder="Digite a quantidade"
                   />
                 </Label>
-                <Label>
-                  Observação
-                  <Input
-                    type="text"
-                    value={novoItem.observacao}
-                    onChange={e => setNovoItem({ ...novoItem, observacao: e.target.value })}
-                    placeholder="Opcional"
-                  />
-                </Label>
+
                 {user?.papel === 'admin' && (
                   <Label>
                     Usuário
@@ -566,8 +498,10 @@ const ItemRequests = () => {
                         color: '#eaf6fb',
                         border: '1px solid #00eaff44',
                         borderRadius: 6,
-                        padding: '6px 10px',
-                        marginLeft: 8
+                        padding: '8px 12px',
+                        marginTop: 2,
+                        width: '100%',
+                        boxSizing: 'border-box'
                       }}
                     >
                       <option value="">Selecione um usuário</option>
@@ -579,25 +513,28 @@ const ItemRequests = () => {
                     </select>
                   </Label>
                 )}
-                <Button type="submit" disabled={submitting}>
-                  {submitting ? 'Enviando...' : 'Solicitar'}
-                </Button>
+
+                <FullWidthField>
+                  <Label>
+                    Observação
+                    <Input
+                      type="text"
+                      value={novoItem.observacao}
+                      onChange={e => setNovoItem({ ...novoItem, observacao: e.target.value })}
+                      placeholder="Observações opcionais sobre a requisição"
+                    />
+                  </Label>
+                </FullWidthField>
+
+                <ButtonContainer>
+                  <Button type="submit" disabled={submitting}>
+                    {submitting ? 'Enviando...' : 'Solicitar Item'}
+                  </Button>
+                </ButtonContainer>
               </RequestForm>
-            </div>
+            </NewRequestContainer>
           )}
-          <h3 style={{
-            color: '#00eaff',
-            margin: '32px 0 16px 0',
-            borderBottom: '1px solid #00eaff33',
-            paddingBottom: 8,
-            fontWeight: 600,
-            fontSize: '1.2rem',
-            textAlign: 'center',
-            width: '100%',
-            maxWidth: 700,
-          }}>
-            Requisições já realizadas
-          </h3>
+          <RequestListTitle>Requisições já realizadas</RequestListTitle>
           <RequestList style={{ width: '100%', justifyContent: 'center' }}>
             {loading ? (
               <div style={{ color: '#eaf6fb', padding: 24, gridColumn: '1/-1', textAlign: 'center' }}>Carregando...</div>
@@ -616,27 +553,44 @@ const ItemRequests = () => {
                 } else {
                   solicitante = '';
                 }
-                const podeExcluir = (
-                  (user?.id === req.requisitante_id || !req.requisitante_id) &&
-                  req.status !== 'aprovado'
-                );
+                const podeExcluir = (user?.id === req.requisitante_id || !req.requisitante_id) && req.status !== 'aprovado';
                 const adminPodeExcluir = user?.papel === 'admin' && req.status !== 'aprovado';
                 return (
                   <RequestItem key={req.id}>
                     <div style={{ flex: 1, width: '100%' }}>
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
-                        <span style={{
-                          display: 'inline-block',
-                          padding: '4px 12px',
-                          borderRadius: 12,
-                          fontWeight: 'bold',
-                          background: statusColors[req.status] || '#f57c00',
-                          color: '#fff',
-                          marginRight: 10,
-                          fontSize: '0.95em'
-                        }}>
-                          {statusLabels[req.status] || req.status}
-                        </span>
+                        {user?.papel === 'admin' ? (
+                          <select
+                            value={req.status}
+                            onChange={(e) => {
+                              if (e.target.value === 'rejeitado') {
+                                handleRejectClick(req.id);
+                              } else {
+                                handleStatusChange(req.id, e.target.value);
+                              }
+                            }}
+                            style={{
+                              backgroundColor: statusColors[req.status],
+                              color: '#fff',
+                              fontWeight: 'bold',
+                              border: `2px solid ${statusColors[req.status]}`,
+                              borderRadius: '12px',
+                              padding: '4px 12px',
+                              marginRight: '10px',
+                              fontSize: '0.95em',
+                              minWidth: '120px'
+                            }}
+                          >
+                            <option value="pendente">Pendente</option>
+                            <option value="aprovado">Aprovado</option>
+                            <option value="rejeitado">Rejeitado</option>
+                            <option value="cancelado">Cancelado</option>
+                          </select>
+                        ) : (
+                          <RequestItemStatus statusColor={statusColors[req.status]}>
+                            {statusLabels[req.status] || req.status}
+                          </RequestItemStatus>
+                        )}
                         <span style={{ color: '#00eaff', fontWeight: 600, fontSize: 16 }}>
                           #{(req.id || '').slice(-6).toUpperCase()}
                         </span>
@@ -650,102 +604,124 @@ const ItemRequests = () => {
                       <div style={{ marginBottom: 2, fontSize: 15 }}>
                         <strong>Solicitante:</strong> {solicitante}
                       </div>
+                      {req.motivo_rejeicao && (
+                        <div style={{ marginBottom: 2, fontSize: 14, color: '#ff6b6b' }}>
+                          <strong>Motivo:</strong> {req.motivo_rejeicao}
+                        </div>
+                      )}
                       {req.observacao && (
                         <div style={{ marginBottom: 2, fontSize: 14, color: '#b2bac2' }}>
                           <strong>Obs:</strong> {req.observacao}
                         </div>
                       )}
                     </div>
-                    <div style={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      gap: 8,
-                      marginTop: 12,
-                      width: '100%',
-                      justifyContent: 'flex-end'
-                    }}>
-                      {user?.papel === 'admin' && req.status === 'pendente' && (
-                        <>
-                          <button
-                            style={{
-                              background: '#388e3c',
-                              color: '#fff',
-                              border: 'none',
-                              borderRadius: 6,
-                              padding: '6px 12px',
-                              cursor: 'pointer',
-                              fontWeight: 'bold'
-                            }}
-                            onClick={() => handleApprove(req)}
-                          >
-                            Aprovar
-                          </button>
-                          <button
-                            style={{
-                              background: '#c91407',
-                              color: '#fff',
-                              border: 'none',
-                              borderRadius: 6,
-                              padding: '6px 12px',
-                              cursor: 'pointer',
-                              fontWeight: 'bold'
-                            }}
-                            onClick={() => handleReject(req)}
-                          >
-                            Rejeitar
-                          </button>
-                        </>
-                      )}
-                      {user?.papel === 'admin' && req.status === 'aprovado' && (
-                        <button
-                          style={{
-                            background: '#f57c00',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: 6,
-                            padding: '6px 12px',
-                            cursor: 'pointer',
-                            fontWeight: 'bold'
-                          }}
-                          onClick={() => handleCancel(req)}
-                        >
-                          Cancelar
-                        </button>
-                      )}
+                    <RequestItemActions>
                       {(adminPodeExcluir || podeExcluir) && (
-                        <button
-                          style={{
-                            background: '#c91407',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: 6,
-                            padding: '6px 14px',
-                            cursor: 'pointer',
-                            fontWeight: 'bold'
-                          }}
-                          onClick={() => handleDeleteRequest(req.id)}
-                          title="Excluir requisição"
-                        >
+                        <ActionButton $bgColor="#c91407" onClick={() => handleDeleteRequest(req.id)} title="Excluir requisição">
                           Excluir
-                        </button>
+                        </ActionButton>
                       )}
-                    </div>
+                    </RequestItemActions>
                   </RequestItem>
                 );
               })
             )}
+            <Paginacao
+              pagina={pagina}
+              totalPaginas={totalPaginas}
+              onPaginaAnterior={() => setPagina(p => Math.max(1, p - 1))}
+              onPaginaProxima={() => setPagina(p => Math.min(totalPaginas, p + 1))}
+            />
           </RequestList>
-          {totalPaginas > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>
-              <button className="paginacao-btn" onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}>Anterior</button>
-              <span style={{ margin: '0 12px', color: '#00eaff' }}>
-                Página {pagina} de {totalPaginas}
-              </span>
-              <button className="paginacao-btn" onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}>Próxima</button>
+
+          {/* Modal de Rejeição */}
+          {modalRejeicao.open && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.7)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999
+            }} onClick={handleRejectCancel}>
+              <div style={{
+                background: '#132040',
+                padding: '32px',
+                borderRadius: '12px',
+                boxShadow: '0 4px 32px 0 rgba(0, 0, 0, 0.5)',
+                maxWidth: '500px',
+                width: '90%',
+                color: '#f3f6f9'
+              }} onClick={e => e.stopPropagation()}>
+                <h3 style={{ color: '#00eaff', marginBottom: '24px', textAlign: 'center' }}>
+                  Rejeitar Requisição
+                </h3>
+                <label style={{ display: 'flex', flexDirection: 'column', color: '#eaf6fb', fontSize: '0.95rem', gap: '6px' }}>
+                  Motivo da Rejeição *
+                  <textarea
+                    value={modalRejeicao.motivo}
+                    onChange={e => setModalRejeicao({ ...modalRejeicao, motivo: e.target.value })}
+                    placeholder="Informe o motivo da rejeição da requisição..."
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '6px',
+                      border: '1px solid #00eaff44',
+                      background: '#181c24',
+                      color: '#eaf6fb',
+                      fontFamily: 'inherit',
+                      fontSize: '0.95rem',
+                      resize: 'vertical',
+                      minHeight: '100px',
+                      marginBottom: '8px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </label>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>
+                  <button 
+                    onClick={handleRejectCancel}
+                    style={{
+                      background: '#6c757d',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      padding: '10px 20px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                      transition: '0.2s'
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    onClick={handleRejectConfirm}
+                    disabled={!modalRejeicao.motivo.trim()}
+                    style={{
+                      background: '#c91407',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      padding: '10px 20px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                      transition: '0.2s',
+                      opacity: !modalRejeicao.motivo.trim() ? 0.6 : 1
+                    }}
+                  >
+                    Rejeitar Requisição
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
-      </div>
+      </MainContainer>
     </div>
   );
 };

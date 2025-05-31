@@ -12,7 +12,8 @@ export default function FiltrosPadrao({
   onLimpar,
   onHoje,
   onSemana,
-  onMes
+  onMes,
+  resetPagina // Nova prop para resetar a página
 }) {
   return (
     <div style={{
@@ -28,7 +29,10 @@ export default function FiltrosPadrao({
       <TextField
         label="Buscar por Nº ou Nome"
         value={busca}
-        onChange={e => setBusca(e.target.value.toLowerCase())} // Garantir busca em letras minúsculas
+        onChange={e => {
+          setBusca(e.target.value.toLowerCase());
+          resetPagina(); // Reseta a página ao alterar busca
+        }}
         size="small"
         sx={{ minWidth: 200, input: { color: '#fff' }, label: { color: '#fff' } }}
       />
@@ -36,7 +40,10 @@ export default function FiltrosPadrao({
         <DateRangePicker
           calendars={1}
           value={buscaPeriodo}
-          onChange={setBuscaPeriodo}
+          onChange={value => {
+            setBuscaPeriodo(value);
+            resetPagina(); // Reseta a página ao alterar período
+          }}
           localeText={{ start: 'Início', end: 'Fim' }}
           slotProps={{
             textField: {
@@ -53,7 +60,10 @@ export default function FiltrosPadrao({
           <Select
             value={statusFiltro}
             label="Status"
-            onChange={e => setStatusFiltro(e.target.value)}
+            onChange={e => {
+              setStatusFiltro(e.target.value);
+              resetPagina(); // Reseta a página ao alterar status
+            }}
             sx={{ color: '#fff' }}
           >
             <MenuItem value="todos">Todos</MenuItem>
@@ -66,28 +76,40 @@ export default function FiltrosPadrao({
       )}
       <Button
         variant="outlined"
-        onClick={onHoje}
+        onClick={() => {
+          onHoje();
+          resetPagina(); // Reseta a página ao aplicar filtro de hoje
+        }}
         sx={{ color: '#fff', borderColor: '#00f2fa' }}
       >
         Hoje
       </Button>
       <Button
         variant="outlined"
-        onClick={onSemana}
+        onClick={() => {
+          onSemana();
+          resetPagina(); // Reseta a página ao aplicar filtro de semana
+        }}
         sx={{ color: '#fff', borderColor: '#00f2fa' }}
       >
         Semana
       </Button>
       <Button
         variant="outlined"
-        onClick={onMes}
+        onClick={() => {
+          onMes();
+          resetPagina(); // Reseta a página ao aplicar filtro de mês
+        }}
         sx={{ color: '#fff', borderColor: '#00f2fa' }}
       >
         Mês
       </Button>
       <Button
         variant="outlined"
-        onClick={onLimpar}
+        onClick={() => {
+          onLimpar();
+          resetPagina(); // Reseta a página ao limpar filtros
+        }}
         sx={{ color: '#fff', borderColor: '#00f2fa', ml: 2 }}
       >
         Limpar Filtros

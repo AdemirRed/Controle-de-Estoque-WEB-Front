@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import FiltrosPadrao from '../../components/FiltrosPadrao';
 import HeaderComponent from '../../components/Header';
 import MenuSidebar from '../../components/MenuSidebar';
+import Paginacao from '../../components/Paginacao';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { Layout, MainContent } from '../Dashboard/styles';
@@ -281,6 +282,7 @@ const UnidadesMedida = () => {
               const fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
               setBuscaPeriodo([inicio, fim]);
             }}
+            resetPagina={() => setPagina(1)} // Reseta a página ao aplicar filtros
           />
           <AddButton onClick={() => {
             setFormData({ nome: '', sigla: '' });
@@ -385,16 +387,12 @@ const UnidadesMedida = () => {
                 )}
               </tbody>
             </Table>
-            {/* Paginação */}
-            {totalPaginas > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>
-                <button className="paginacao-btn" onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}>Anterior</button>
-                <span style={{ margin: '0 12px', color: '#00eaff' }}>
-                  Página {pagina} de {totalPaginas}
-                </span>
-                <button className="paginacao-btn" onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}>Próxima</button>
-              </div>
-            )}
+            <Paginacao
+              pagina={pagina}
+              totalPaginas={totalPaginas}
+              onPaginaAnterior={() => setPagina(p => Math.max(1, p - 1))}
+              onPaginaProxima={() => setPagina(p => Math.min(totalPaginas, p + 1))}
+            />
           </TableContainer>
         </Container>
       </MainContent>

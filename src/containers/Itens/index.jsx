@@ -13,6 +13,7 @@ import { toast } from 'react-toastify';
 import FiltrosPadrao from '../../components/FiltrosPadrao';
 import HeaderComponent from '../../components/Header';
 import MenuSidebar from '../../components/MenuSidebar';
+import Paginacao from '../../components/Paginacao';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import {
@@ -71,6 +72,20 @@ const Itens = () => {
       : 'R$ 0,00';
   };
 
+  const formatarPrecoInput = (valor) => {
+    const apenasNumeros = valor.replace(/\D/g, '');
+    const numeroFormatado = (parseInt(apenasNumeros, 10) / 100).toFixed(2);
+    return numeroFormatado.replace('.', ',');
+  };
+
+  const handlePrecoChange = (e) => {
+    const { value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      preco: formatarPrecoInput(value),
+    }));
+  };
+
   const carregarItens = async () => {
     try {
       setLoading(true);
@@ -112,7 +127,7 @@ const Itens = () => {
         nome: formData.nome,
         descricao: formData.descricao,
         quantidade: parseInt(formData.quantidade),
-        preco: formData.preco ? parseFloat(formData.preco) : null,
+        preco: formData.preco ? parseFloat(formData.preco.replace(',', '.')) : null,
         quantidade_minima: parseInt(formData.quantidade_minima) // Adicionar quantidade_minima
       });
 
@@ -137,7 +152,7 @@ const Itens = () => {
     setFormData({
       nome: item.nome,
       descricao: item.descricao,
-      preco: item.preco,
+      preco: item.preco ? item.preco.toString().replace('.', ',') : '',
       quantidade_minima: item.quantidade_minima // Adicionar quantidade_minima
     });
     setShowEditForm(true);
@@ -160,7 +175,7 @@ const Itens = () => {
       await api.put(`/itens/${selectedItem.id}`, {
         nome: formData.nome,
         descricao: formData.descricao,
-        preco: formData.preco ? parseFloat(formData.preco) : null,
+        preco: formData.preco ? parseFloat(formData.preco.replace(',', '.')) : null,
         quantidade_minima: parseInt(formData.quantidade_minima) // Adicionar quantidade_minima
       });
 
@@ -403,11 +418,11 @@ const Itens = () => {
                 <FormGroup>
                   <Label>Preço</Label>
                   <Input
-                    type="number"
-                    step="0.01"
+                    type="text"
                     name="preco"
                     value={formData.preco}
-                    onChange={handleInputChange}
+                    onChange={handlePrecoChange}
+                    placeholder="0,00"
                   />
                 </FormGroup>
 
@@ -464,11 +479,11 @@ const Itens = () => {
                 <FormGroup>
                   <Label>Preço</Label>
                   <Input
-                    type="number"
-                    step="0.01"
+                    type="text"
                     name="preco"
                     value={formData.preco}
-                    onChange={handleInputChange}
+                    onChange={handlePrecoChange}
+                    placeholder="0,00"
                   />
                 </FormGroup>
 
@@ -624,16 +639,12 @@ const Itens = () => {
                 )}
               </tbody>
             </Table>
-            {/* Paginação */}
-            {totalPaginas > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>
-                <button className="paginacao-btn" onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}>Anterior</button>
-                <span style={{ margin: '0 12px', color: '#00eaff' }}>
-                  Página {pagina} de {totalPaginas}
-                </span>
-                <button className="paginacao-btn" onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}>Próxima</button>
-              </div>
-            )}
+            <Paginacao
+              pagina={pagina}
+              totalPaginas={totalPaginas}
+              onPaginaAnterior={() => setPagina((p) => Math.max(1, p - 1))}
+              onPaginaProxima={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
+            />
           </TableContainer>
         </Container>
       </MainContent>

@@ -15,11 +15,28 @@ export const Container = styled.div`
 `;
 
 export const RequestForm = styled.form`
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
   margin-bottom: 32px;
-  flex-wrap: wrap;
+  width: 100%;
+  max-width: 600px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+`;
+
+export const FullWidthField = styled.div`
+  grid-column: 1 / -1;
+`;
+
+export const ButtonContainer = styled.div`
+  grid-column: 1 / -1;
+  display: flex;
   justify-content: center;
+  margin-top: 8px;
 `;
 
 export const Label = styled.label`
@@ -116,3 +133,123 @@ export const Select = styled.select`
   padding: 6px 10px;
   margin-left: 8px;
   `;
+
+export const SidebarButton = styled.button`
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 3000;
+  background: #232a36;
+  border: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  color: #00eaff;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px #0008;
+  cursor: pointer;
+`;
+
+export const SidebarContainer = styled.div`
+  min-width: 250px;
+  max-width: 300px;
+  width: 100%;
+  transition: all 0.3s;
+  z-index: 200;
+  background: #232a36;
+  position: ${({ $isMobile }) => ($isMobile ? 'fixed' : 'relative')};
+  top: ${({ $isMobile }) => ($isMobile ? 0 : 'unset')};
+  left: ${({ $isMobile }) => ($isMobile ? 0 : 'unset')};
+  height: ${({ $isMobile }) => ($isMobile ? '100vh' : 'unset')};
+  box-shadow: ${({ $isMobile }) => ($isMobile ? '2px 0 16px #0008' : 'unset')};
+`;
+
+export const CloseSidebarButton = styled.button`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #00eaff;
+  font-size: 28px;
+  display: ${({ $isMobile }) => ($isMobile ? 'flex' : 'none')};
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 3001;
+`;
+
+export const MainContainer = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  padding: 0;
+`;
+
+export const NewRequestContainer = styled.div`
+  background: #132040;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 32px 0 rgba(0, 0, 0, 0.25);
+  margin-bottom: 32px;
+  max-width: 600px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+export const RequestTitle = styled.h2`
+  color: #00eaff;
+  margin-bottom: 18px;
+  text-align: center;
+`;
+
+export const RequestListTitle = styled.h3`
+  color: #00eaff;
+  margin: 32px 0 16px 0;
+  border-bottom: 1px solid #00eaff33;
+  padding-bottom: 8px;
+  font-weight: 600;
+  font-size: 1.2rem;
+  text-align: center;
+  width: 100%;
+  max-width: 700px;
+`;
+
+export const RequestItemStatus = styled.span`
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: bold;
+  background: ${({ statusColor }) => statusColor || '#f57c00'};
+  color: #fff;
+  margin-right: 10px;
+  font-size: 0.95em;
+`;
+
+export const RequestItemActions = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  margin-top: 12px;
+  width: 100%;
+  justify-content: flex-end;
+`;
+
+export const ActionButton = styled.button`
+  background: ${({ $bgColor }) => $bgColor || '#388e3c'};
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-weight: bold;
+`;

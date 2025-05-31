@@ -72,46 +72,63 @@ export const NotificationBadge = styled.div`
   margin-right: 15px;
   color: #00eaff;
   transition: color 0.2s;
+  padding: 8px;
+  border-radius: 50%;
+  
+  &:hover {
+    background: rgba(0, 234, 255, 0.1);
+  }
 
   &::after {
     content: '${props => props.count || ''}';
     position: absolute;
-    top: -8px;
-    right: -8px;
+    top: 0;
+    right: 0;
     background: linear-gradient(90deg, #ff4b4b, #c91407);
     color: white;
     border-radius: 50%;
     padding: 2px 6px;
-    font-size: 12px;
+    font-size: 11px;
+    font-weight: bold;
     display: ${props => props.count ? 'block' : 'none'};
     box-shadow: 0 2px 8px #10131a33;
+    min-width: 16px;
+    height: 16px;
+    text-align: center;
+    line-height: 12px;
   }
 `;
 
 export const NotificationPanel = styled.div`
   position: absolute;
-  top: 60px;
-  right: 20px;
+  top: 100%;
+  right: 0;
   background: #232a36;
   border: 1px solid #00eaff55;
   border-radius: 12px;
-  padding: 15px;
-  width: 320px;
-  box-shadow: 0 2px 16px #10131a33;
+  padding: 16px;
+  width: 380px;
+  max-width: 90vw;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   z-index: 1000;
+  margin-top: 8px;
+
+  @media (max-width: 480px) {
+    width: 300px;
+    right: -50px;
+  }
 
   .notification-item {
-    padding: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-
+    border-radius: 6px;
+    margin-bottom: 4px;
+    
     &:last-child {
       border-bottom: none;
+      margin-bottom: 0;
     }
 
-    .actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
+    &:hover {
+      background-color: rgba(0, 234, 255, 0.05) !important;
     }
   }
 `;

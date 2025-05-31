@@ -6,6 +6,8 @@ import HeaderComponent from '../../components/Header';
 import MenuSidebar from '../../components/MenuSidebar';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import Paginacao from '../../components/Paginacao';
+import FiltrosPadrao from '../../components/FiltrosPadrao'; // Importar o componente FiltrosPadrao
 import { Container, Content, Form } from './styles';
 
 function Fornecedores() {
@@ -29,6 +31,10 @@ function Fornecedores() {
   const fornecedoresPorPagina = 20;
   const totalPaginas = Math.ceil(fornecedores.length / fornecedoresPorPagina);
   const fornecedoresPaginados = fornecedores.slice((pagina - 1) * fornecedoresPorPagina, pagina * fornecedoresPorPagina);
+
+  // Filtros
+  const [busca, setBusca] = useState('');
+  const [buscaPeriodo, setBuscaPeriodo] = useState([null, null]);
 
   useEffect(() => {
     loadFornecedores();
@@ -327,6 +333,39 @@ function Fornecedores() {
               )}
             </Form>
 
+            <FiltrosPadrao
+              busca={busca}
+              setBusca={setBusca}
+              buscaPeriodo={buscaPeriodo}
+              setBuscaPeriodo={setBuscaPeriodo}
+              exibirStatus={false}
+              onLimpar={() => {
+                setBusca('');
+                setBuscaPeriodo([null, null]);
+              }}
+              onHoje={() => {
+                const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0);
+                setBuscaPeriodo([hoje, hoje]);
+              }}
+              onSemana={() => {
+                const hoje = new Date();
+                const inicio = new Date(hoje);
+                inicio.setDate(hoje.getDate() - hoje.getDay());
+                inicio.setHours(0, 0, 0, 0);
+                const fim = new Date(inicio);
+                fim.setDate(inicio.getDate() + 6);
+                setBuscaPeriodo([inicio, fim]);
+              }}
+              onMes={() => {
+                const hoje = new Date();
+                const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+                const fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+                setBuscaPeriodo([inicio, fim]);
+              }}
+              resetPagina={() => setPagina(1)} // Reseta a página ao aplicar filtros
+            />
+
             <div className="lista-fornecedores">
               <h2>Fornecedores Cadastrados</h2>
               <table>
@@ -369,16 +408,12 @@ function Fornecedores() {
                   ))}
                 </tbody>
               </table>
-              {/* Paginação */}
-              {totalPaginas > 1 && (
-                <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>
-                  <button className="paginacao-btn" onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}>Anterior</button>
-                  <span style={{ margin: '0 12px', color: '#00eaff' }}>
-                    Página {pagina} de {totalPaginas}
-                  </span>
-                  <button className="paginacao-btn" onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}>Próxima</button>
-                </div>
-              )}
+              <Paginacao
+                pagina={pagina}
+                totalPaginas={totalPaginas}
+                onPaginaAnterior={() => setPagina(p => Math.max(1, p - 1))}
+                onPaginaProxima={() => setPagina(p => Math.min(totalPaginas, p + 1))}
+              />
             </div>
           </>
         ) : (

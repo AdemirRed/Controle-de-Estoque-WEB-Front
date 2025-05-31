@@ -53,6 +53,7 @@ const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState({
     totalProdutos: 0,
     pedidosPendentes: 0,
+    requisicoesPendentes: 0, // novo campo
     movimentacoes: 0,
     valorTotal: 0,
     estoqueBaixo: 0
@@ -79,10 +80,16 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [itensResponse, movimentacoesResponse, pedidosPendentesResponse] = await Promise.all([
+        const [
+          itensResponse,
+          movimentacoesResponse,
+          pedidosPendentesResponse,
+          requisicoesResponse // nova requisição
+        ] = await Promise.all([
           api.get('/itens'),
           api.get('/movimentacoes-estoque'),
-          api.get('/pedidos?status=pendente')
+          api.get('/pedidos?status=pendente'),
+          api.get('/item-requests')
         ]);
 
         // Garante que os dados sejam arrays
@@ -108,9 +115,16 @@ const Dashboard = () => {
           return diff <= 24 * 60 * 60 * 1000;
         });
 
+        // Requisições de itens pendentes
+        const requisicoesPendentes = Array.isArray(requisicoesResponse.data)
+          ? requisicoesResponse.data.filter(r => r.status === 'pendente')
+          : (requisicoesResponse.data?.filter?.(r => r.status === 'pendente') || []);
+        const requisicoesPendentesTotal = requisicoesPendentes.length;
+
         setDashboardData({
           totalProdutos: itens.length,
           pedidosPendentes: pedidosPendentesTotal,
+          requisicoesPendentes: requisicoesPendentesTotal, // novo campo
           movimentacoes: ultimas24h.length,
           valorTotal: valorTotal,
           estoqueBaixo: estoqueBaixo
@@ -311,6 +325,23 @@ const Dashboard = () => {
               </CardValue>
               <CardContent>
                 <p style={{ color: '#666' }}>Aguardando processamento</p>
+              </CardContent>
+            </Card>
+
+            <Card
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/item-requests')}
+              title="Ver requisições pendentes"
+            >
+              <CardHeader>
+                <CardTitle>Requisições Pendentes</CardTitle>
+                <FaExchangeAlt size={24} color="#f57c00" />
+              </CardHeader>
+              <CardValue>
+                {loading ? 'Carregando...' : dashboardData.requisicoesPendentes}
+              </CardValue>
+              <CardContent>
+                <p style={{ color: '#666' }}>Aguardando aprovação</p>
               </CardContent>
             </Card>
 
