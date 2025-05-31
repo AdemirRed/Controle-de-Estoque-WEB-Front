@@ -60,7 +60,8 @@ const Pedidos = () => {
     itemNome: '',
     quantidade: '',
     unidadeMedidaId: '',
-    observacoes: ''
+    observacoes: '',
+    fornecedorId: '' // novo campo
   });
   const [submitting, setSubmitting] = useState(false);
   const [itens, setItens] = useState([]);
@@ -73,6 +74,12 @@ const Pedidos = () => {
     open: false,
     pedidoId: null,
     motivo: ''
+  });
+
+  const [modalFornecedor, setModalFornecedor] = useState({
+    open: false,
+    pedidoId: null,
+    fornecedorId: ''
   });
 
   // Paginação
@@ -147,10 +154,25 @@ const Pedidos = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
+      // Busca o nome do usuário logado
+      const criadoPor = user?.nome || user?.email || 'Usuário';
+
+      // Busca o item selecionado para cálculo do valor_total
+      let valor_total = null;
+      if (novoPedido.itemId) {
+        const itemSelecionado = itens.find(i => i.id === novoPedido.itemId);
+        if (itemSelecionado && itemSelecionado.valor) {
+          valor_total = Number(itemSelecionado.valor) * Number(novoPedido.quantidade || 0);
+        }
+      }
+
       const body = {
         quantidade: novoPedido.quantidade,
         observacoes: novoPedido.observacoes,
-        status: 'pendente'
+        status: 'pendente',
+        fornecedor_id: novoPedido.fornecedorId, // sempre enviar fornecedor
+        criado_por: criadoPor,
+        valor_total: valor_total
       };
 
       // Se selecionou um item existente
@@ -162,23 +184,43 @@ const Pedidos = () => {
         body.item_unidade_medida_id = novoPedido.unidadeMedidaId;
       }
 
+      if (!novoPedido.fornecedorId) {
+        setError('Fornecedor é obrigatório');
+        setSubmitting(false);
+        return;
+      }
+
       await PedidoService.criarPedido(body);
-      setNovoPedido({ itemId: '', itemNome: '', quantidade: '', unidadeMedidaId: '', observacoes: '' });
+      setNovoPedido({ itemId: '', itemNome: '', quantidade: '', unidadeMedidaId: '', observacoes: '', fornecedorId: '' });
       const res = await PedidoService.listarPedidos();
       setPedidos(res.data);
     } catch (err) {
+      setError(err?.response?.data?.message || 'Erro ao enviar pedido');
       console.error('Erro ao enviar pedido');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleStatusChange = async (id, status) => {
+  const handleStatusChange = async (id, status, fornecedorId = null) => {
     try {
-      await PedidoService.atualizarPedido(id, { status });
+      if (status === 'aprovado') {
+        let pedido = pedidos.find(p => p.id === id);
+        let fornecedorSelecionado = fornecedorId || pedido?.fornecedor_id;
+        if (!fornecedorSelecionado) {
+          // Abre modal para selecionar fornecedor
+          setModalFornecedor({ open: true, pedidoId: id, fornecedorId: '' });
+          return;
+        }
+        await PedidoService.atualizarPedido(id, { status, fornecedor_id: fornecedorSelecionado });
+      } else {
+        await PedidoService.atualizarPedido(id, { status });
+      }
       const res = await PedidoService.listarPedidos();
       setPedidos(res.data);
+      setError(null);
     } catch (err) {
+      setError(err?.response?.data?.message || 'Erro ao atualizar status');
       console.error('Erro ao atualizar status');
     }
   };
@@ -374,6 +416,20 @@ const Pedidos = () => {
                 />
               </Label>
 
+              <Label>
+                Fornecedor *
+                <Select
+                  value={novoPedido.fornecedorId}
+                  onChange={e => setNovoPedido({ ...novoPedido, fornecedorId: e.target.value })}
+                  required
+                >
+                  <option value="">Selecione um fornecedor</option>
+                  {fornecedores.map(f => (
+                    <option key={f.id} value={f.id}>{f.nome}</option>
+                  ))}
+                </Select>
+              </Label>
+
               <FullWidthField>
                 <Label>
                   Observações
@@ -406,37 +462,50 @@ const Pedidos = () => {
               pedidosPaginados.map((pedido, idx) => {
                 const itemNome = itens.find(i => i.id === pedido.item_id)?.nome || pedido.item_nome || pedido.item_id;
                 const unidadeSigla = unidadesMedida.find(u => u.id === pedido.item_unidade_medida_id)?.sigla || '';
+                // Novo: valor total
+                const valorTotal = pedido.valor_total !== undefined && pedido.valor_total !== null
+                  ? Number(pedido.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                  : '-';
                 return (
                   <RequestItem key={pedido.id}>
                     <div style={{ flex: 1, width: '100%' }}>
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
                         {user?.papel === 'admin' ? (
-                          <Select
-                            value={pedido.status}
-                            onChange={(e) => {
-                              if (e.target.value === 'rejeitado') {
-                                handleRejectClick(pedido.id);
-                              } else {
-                                handleStatusChange(pedido.id, e.target.value);
-                              }
-                            }}
-                            style={{
-                              backgroundColor: statusColors[pedido.status],
-                              color: '#fff',
-                              fontWeight: 'bold',
-                              border: `2px solid ${statusColors[pedido.status]}`,
-                              borderRadius: '12px',
-                              padding: '4px 12px',
-                              marginRight: '10px',
-                              fontSize: '0.95em',
-                              minWidth: '120px'
-                            }}
-                          >
-                            <option value="pendente">Pendente</option>
-                            <option value="aprovado">Aprovado</option>
-                            <option value="rejeitado">Rejeitado</option>
-                            <option value="entregue">Entregue</option>
-                          </Select>
+                          <>
+                            <Select
+                              value={pedido.status}
+                              onChange={(e) => {
+                                if (e.target.value === 'aprovado') {
+                                  // Se não tem fornecedor, abre modal
+                                  if (!pedido.fornecedor_id) {
+                                    setModalFornecedor({ open: true, pedidoId: pedido.id, fornecedorId: '' });
+                                    return;
+                                  }
+                                  handleStatusChange(pedido.id, e.target.value, pedido.fornecedor_id);
+                                } else if (e.target.value === 'rejeitado') {
+                                  handleRejectClick(pedido.id);
+                                } else {
+                                  handleStatusChange(pedido.id, e.target.value);
+                                }
+                              }}
+                              style={{
+                                backgroundColor: statusColors[pedido.status],
+                                color: '#fff',
+                                fontWeight: 'bold',
+                                border: `2px solid ${statusColors[pedido.status]}`,
+                                borderRadius: '12px',
+                                padding: '4px 12px',
+                                marginRight: '10px',
+                                fontSize: '0.95em',
+                                minWidth: '120px'
+                              }}
+                            >
+                              <option value="pendente">Pendente</option>
+                              <option value="aprovado">Aprovado</option>
+                              <option value="rejeitado">Rejeitado</option>
+                              <option value="entregue">Entregue</option>
+                            </Select>
+                          </>
                         ) : (
                           <RequestItemStatus statusColor={statusColors[pedido.status]}>
                             {statusLabels[pedido.status] || pedido.status}
@@ -451,6 +520,17 @@ const Pedidos = () => {
                       </div>
                       <div style={{ marginBottom: 2, fontSize: 15 }}>
                         <strong>Qtd:</strong> {pedido.quantidade} {unidadeSigla}
+                      </div>
+                      <div style={{ marginBottom: 2, fontSize: 15 }}>
+                        <strong>Fornecedor:</strong> {fornecedores.find(f => f.id === pedido.fornecedor_id)?.nome || '-'}
+                      </div>
+                      {/* Novo: Exibir valor total */}
+                      <div style={{ marginBottom: 2, fontSize: 15 }}>
+                        <strong>Valor Total:</strong> {valorTotal}
+                      </div>
+                      {/* Novo: Exibir criado por */}
+                      <div style={{ marginBottom: 2, fontSize: 14, color: '#b2bac2' }}>
+                        <strong>Criado por:</strong> {pedido.criado_por || '-'}
                       </div>
                       {pedido.motivo_rejeicao && (
                         <div style={{ marginBottom: 2, fontSize: 14, color: '#ff6b6b' }}>
@@ -481,6 +561,50 @@ const Pedidos = () => {
           </RequestList>
         </div>
       </MainContainer>
+
+      {/* Modal de Fornecedor para Aprovação */}
+      {modalFornecedor.open && (
+        <ModalOverlay onClick={() => setModalFornecedor({ open: false, pedidoId: null, fornecedorId: '' })}>
+          <ModalContent onClick={e => e.stopPropagation()}>
+            <ModalTitle>Selecione o Fornecedor</ModalTitle>
+            <Label>
+              Fornecedor *
+              <Select
+                value={modalFornecedor.fornecedorId}
+                onChange={e => setModalFornecedor(m => ({ ...m, fornecedorId: e.target.value }))}
+                required
+              >
+                <option value="">Selecione um fornecedor</option>
+                {fornecedores.map(f => (
+                  <option key={f.id} value={f.id}>{f.nome}</option>
+                ))}
+              </Select>
+            </Label>
+            <ModalButtonContainer>
+              <ModalButton
+                variant="secondary"
+                onClick={() => setModalFornecedor({ open: false, pedidoId: null, fornecedorId: '' })}
+              >
+                Cancelar
+              </ModalButton>
+              <ModalButton
+                variant="danger"
+                onClick={() => {
+                  if (!modalFornecedor.fornecedorId) {
+                    setError('Fornecedor é obrigatório para aprovar o pedido');
+                    return;
+                  }
+                  handleStatusChange(modalFornecedor.pedidoId, 'aprovado', modalFornecedor.fornecedorId);
+                  setModalFornecedor({ open: false, pedidoId: null, fornecedorId: '' });
+                }}
+                disabled={!modalFornecedor.fornecedorId}
+              >
+                Aprovar Pedido
+              </ModalButton>
+            </ModalButtonContainer>
+          </ModalContent>
+        </ModalOverlay>
+      )}
 
       {/* Modal de Rejeição */}
       {modalRejeicao.open && (

@@ -16,6 +16,24 @@ function requestNotificationPermission() {
   }
 }
 
+// Utilitário para persistir notificações visualizadas
+function getViewedNotifications() {
+  try {
+    return JSON.parse(localStorage.getItem('viewedNotifications') || '{}');
+  } catch {
+    return {};
+  }
+}
+function setViewedNotification(key) {
+  const viewed = getViewedNotifications();
+  viewed[key] = true;
+  localStorage.setItem('viewedNotifications', JSON.stringify(viewed));
+}
+function isNotificationViewed(key) {
+  const viewed = getViewedNotifications();
+  return !!viewed[key];
+}
+
 const NotificationListener = () => {
   const { user } = useAuth();
   const { addNotification } = useNotifications();
@@ -138,16 +156,18 @@ const NotificationListener = () => {
         if (user.papel !== 'admin') {
           // Buscar pedidos do usuário atual
           const pedidosRes = await PedidoService.listarPedidos();
-          const meusPedidos = pedidosRes.data?.filter(p => 
-            p.usuario_id === user.id || p.requisitante_id === user.id
+          // Agora filtra pelo nome do usuário no campo criado_por
+          const meusPedidos = pedidosRes.data?.filter(p =>
+            (p.criado_por && (p.criado_por === user.nome || p.criado_por === user.email))
           ) || [];
 
           // Verificar mudanças de status
           meusPedidos.forEach(pedido => {
             const lastStatus = lastUserPedidosRef.current.get(pedido.id);
-            
-            if (lastStatus && lastStatus !== pedido.status) {
-              // Status mudou, enviar notificação
+            const notifKey = `pedido-${pedido.id}-${pedido.status}`;
+
+            // Notificar se for a primeira vez (lastStatus === undefined) ou se mudou o status
+            if ((lastStatus === undefined || lastStatus !== pedido.status) && !isNotificationViewed(notifKey)) {
               const statusLabels = {
                 pendente: 'Pendente',
                 aprovado: 'Aprovado',
@@ -156,18 +176,74 @@ const NotificationListener = () => {
               };
 
               const itemNome = pedido.item_nome || pedido.item_id || 'Item';
-              
+
+              let bodyMsg = `Seu pedido de ${itemNome} foi ${statusLabels[pedido.status]?.toLowerCase() || pedido.status}.`;
+              // Se for rejeitado, incluir motivo
+              if (pedido.status === 'rejeitado' && (pedido.motivo_recusa || pedido.motivo_rejeicao)) {
+                bodyMsg += ` Motivo: ${pedido.motivo_recusa || pedido.motivo_rejeicao}`;
+              }
+
               addNotification({
                 title: `Pedido ${statusLabels[pedido.status] || pedido.status}`,
-                body: `Seu pedido de ${itemNome} foi ${statusLabels[pedido.status]?.toLowerCase() || pedido.status}.`,
+                body: bodyMsg,
                 type: 'pedido_status',
                 action: '/pedidos'
               });
+              setViewedNotification(notifKey);
             }
 
             // Atualizar último status conhecido
             lastUserPedidosRef.current.set(pedido.id, pedido.status);
           });
+
+          // Notificações para requisições de itens (usando solicitante)
+          try {
+            const requisicoesRes = await api.get('/item-requests');
+            const minhasRequisicoes = requisicoesRes.data?.filter(r =>
+              (r.solicitante && (r.solicitante === user.nome || r.solicitante === user.email)) ||
+              (r.usuario && (r.usuario.nome === user.nome || r.usuario.email === user.email)) ||
+              (r.usuario_id && r.usuario_id === user.id) ||
+              (r.requisitante_id && r.requisitante_id === user.id)
+            ) || [];
+
+            // Use um Map separado para requisições se quiser evitar conflitos
+            if (!NotificationListener.lastUserRequisicoesRef) {
+              NotificationListener.lastUserRequisicoesRef = new Map();
+            }
+            const lastUserRequisicoesRef = NotificationListener.lastUserRequisicoesRef;
+
+            minhasRequisicoes.forEach(req => {
+              const lastStatus = lastUserRequisicoesRef.get(req.id);
+              const notifKey = `requisicao-${req.id}-${req.status}`;
+
+              if ((lastStatus === undefined || lastStatus !== req.status) && !isNotificationViewed(notifKey)) {
+                const statusLabels = {
+                  pendente: 'Pendente',
+                  aprovado: 'Aprovado',
+                  rejeitado: 'Rejeitado',
+                  cancelado: 'Cancelado'
+                };
+
+                let bodyMsg = `Sua requisição de item foi ${statusLabels[req.status]?.toLowerCase() || req.status}.`;
+                // Mostra motivo se rejeitado
+                if (req.status === 'rejeitado' && (req.motivo_rejeicao || req.motivo_recusa)) {
+                  bodyMsg += ` Motivo: ${req.motivo_rejeicao || req.motivo_recusa}`;
+                }
+
+                addNotification({
+                  title: `Requisição ${statusLabels[req.status] || req.status}`,
+                  body: bodyMsg,
+                  type: 'requisicao_status',
+                  action: '/item-requests'
+                });
+                setViewedNotification(notifKey);
+              }
+
+              lastUserRequisicoesRef.set(req.id, req.status);
+            });
+          } catch (e) {
+            // Silencie erros de polling de requisições
+          }
         }
 
       } catch (error) {
@@ -190,7 +266,7 @@ const NotificationListener = () => {
         intervalRef.current = null;
       }
     };
-  }, [user, addNotification]);
+  }, [user, addNotification, REMINDER_INTERVAL]);
 
   // Componente não renderiza nada visualmente
   return null;

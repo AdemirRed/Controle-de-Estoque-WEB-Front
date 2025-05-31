@@ -543,13 +543,13 @@ const ItemRequests = () => {
             ) : (
               requestsPaginados.map((req, idx) => {
                 const itemNome = itens.find(i => i.id === req.item_id)?.nome || req.item_id;
+                // Mostra sempre o nome do solicitante, nunca só o id
                 let solicitante = '';
-                const usuarioId = req.usuario_id || req.requisitante_id;
-                if (usuarios.length > 0 && usuarioId) {
-                  const usuarioObj = usuarios.find(u => String(u.id) === String(usuarioId));
-                  solicitante = usuarioObj ? usuarioObj.nome : usuarioId;
-                } else if (usuarioId) {
-                  solicitante = usuarioId;
+                if (req.usuario && req.usuario.nome) {
+                  solicitante = req.usuario.nome;
+                } else if (usuarios.length > 0 && (req.usuario_id || req.requisitante_id)) {
+                  const usuarioObj = usuarios.find(u => String(u.id) === String(req.usuario_id || req.requisitante_id));
+                  solicitante = usuarioObj ? usuarioObj.nome : '';
                 } else {
                   solicitante = '';
                 }
@@ -601,14 +601,17 @@ const ItemRequests = () => {
                       <div style={{ marginBottom: 2, fontSize: 15 }}>
                         <strong>Qtd:</strong> {req.quantidade}
                       </div>
-                      <div style={{ marginBottom: 2, fontSize: 15 }}>
-                        <strong>Solicitante:</strong> {solicitante}
-                      </div>
-                      {req.motivo_rejeicao && (
-                        <div style={{ marginBottom: 2, fontSize: 14, color: '#ff6b6b' }}>
-                          <strong>Motivo:</strong> {req.motivo_rejeicao}
+                      {/* Exibe solicitante só para admin */}
+                      {user?.papel === 'admin' && (
+                        <div style={{ marginBottom: 2, fontSize: 15 }}>
+                          <strong>Solicitante:</strong> {solicitante || '-'}
                         </div>
                       )}
+                      {req.motivo_rejeicao || req.motivo_recusa ? (
+                        <div style={{ marginBottom: 2, fontSize: 14, color: '#ff6b6b' }}>
+                          <strong>Motivo:</strong> {req.motivo_rejeicao || req.motivo_recusa}
+                        </div>
+                      ) : null}
                       {req.observacao && (
                         <div style={{ marginBottom: 2, fontSize: 14, color: '#b2bac2' }}>
                           <strong>Obs:</strong> {req.observacao}
