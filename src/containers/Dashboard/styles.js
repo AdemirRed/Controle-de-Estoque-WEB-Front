@@ -1,6 +1,6 @@
 import styled, { keyframes } from 'styled-components';
 
-// Sutil animação de gradiente para um toque moderno, mas discreto
+// Sutil animação de gradiente para um toque moderno, mas discreto 
 const subtleGradient = keyframes`
   0% { background-position: 0% 50%; }
   100% { background-position: 100% 50%; }
