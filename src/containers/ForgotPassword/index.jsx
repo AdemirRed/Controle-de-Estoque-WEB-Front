@@ -1,6 +1,6 @@
 import { Mail } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
-import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
@@ -86,7 +86,7 @@ export function ForgotPassword() {
     }
     setLoading(true);
     try {
-      const response = await fetch('/api/esqueci-senha', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/esqueci-senha`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
@@ -119,7 +119,7 @@ export function ForgotPassword() {
     if (!canResend || resendCount >= 3) return; // alterado de 5 para 3
     setLoading(true);
     try {
-      const response = await fetch('/api/esqueci-senha', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/esqueci-senha`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
@@ -170,7 +170,7 @@ export function ForgotPassword() {
     }
     setLoading(true);
     try {
-      const response = await fetch('/api/redefinir-senha', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/redefinir-senha`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, codigo: code, novaSenha: newPassword })
