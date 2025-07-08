@@ -5,6 +5,6 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://redblackspy.ddns.net:2001/api/:splat"
+  to = "https://controle-de-estoque-web-api.onrender.com/api/:splat"
   status = 200
   force = true

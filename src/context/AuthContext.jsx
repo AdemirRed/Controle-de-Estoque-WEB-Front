@@ -8,8 +8,11 @@ const AuthContext = createContext({});
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || '/auth', // Usa a URL da API ou fallback para o proxy
     headers: {
-      'Content-Type': 'application/json'
-    }
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Access-Control-Allow-Origin': '*'
+    },
+    timeout: 100000 // 100 segundos de timeout
 });
 
 // Interceptor para adicionar o token em todas as requisições
@@ -85,16 +88,45 @@ export const AuthProvider = ({ children }) => {
   // Método para criar uma conta
   const signUp = async ({ nome, email, password, papel }) => {
     try {
+      console.log('Tentando criar conta:', { nome, email, papel });
+      console.log('URL base da API:', api.defaults.baseURL);
+      
       const response = await api.post('/usuarios', {
         nome,
         email,
         senha_hash: password,
         papel
       });
+      
+      console.log('Resposta da criação de conta:', response.data);
       toast.success('Conta criada com sucesso!');
       return response.data;
     } catch (error) {
-      toast.error(error.response?.data?.erro || 'Erro ao criar conta');
+      console.error('Erro detalhado ao criar conta:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        headers: error.response?.headers,
+        url: error.config?.url,
+        method: error.config?.method
+      });
+      
+      let errorMessage = 'Erro ao criar conta';
+      
+      if (error.response?.status === 426) {
+        errorMessage = 'Erro de conexão com o servidor (426 - Upgrade Required). Verifique se a API está funcionando corretamente.';
+      } else if (error.response?.data?.erro) {
+        errorMessage = error.response.data.erro;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.status) {
+        errorMessage = `Erro HTTP ${error.response.status}: ${error.response.statusText || 'Erro desconhecido'}`;
+      } else if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
+        errorMessage = 'Erro de rede. Verifique sua conexão com a internet.';
+      }
+      
+      toast.error(errorMessage);
       throw error;
     }
   };
