@@ -385,8 +385,8 @@ function Fornecedores() {
                       <td>{fornecedor.nome}</td>
                       <td>{fornecedor.telefone}</td>
                       <td>{fornecedor.email || '-'}</td>
-                      <td>{formatarData(fornecedor.createdAt)}</td>
-                      <td>{formatarData(fornecedor.updatedAt)}</td>
+                      <td>{formatarData(fornecedor.created_at)}</td>
+                      <td>{formatarData(fornecedor.updated_at)}</td>
                       <td>
                         <button 
                           onClick={() => loadFornecedor(fornecedor.id)}
