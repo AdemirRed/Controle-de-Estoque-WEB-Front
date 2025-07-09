@@ -413,7 +413,7 @@ const Dashboard = () => {
           </DashboardGrid>
 
           <ChartSection>
-            <h2 style={{ color: '#0015FF', marginBottom: '15px' }}>Histórico de Movimentações</h2>
+            <h2 style={{ color: '#FFFFFF', marginBottom: '15px' }}>Histórico de Movimentações</h2>
             <div className="chart-container">
               {chartData ? (
                 <Line
@@ -425,31 +425,31 @@ const Dashboard = () => {
                       legend: {
                         position: 'top',
                         labels: {
-                          color: '#0015FF'
+                          color: '#FFFFFF'
                         }
                       },
                       title: {
                         display: true,
                         text: 'Movimentações dos Últimos 7 Dias',
-                        color: '#0015FF'
+                        color: '#FFFFFF'
                       }
                     },
                     scales: {
                       y: {
                         beginAtZero: true,
                         grid: {
-                          color: 'rgba(0, 21, 255, 0.1)'
+                          color: 'rgba(255, 255, 255, 0.1)'
                         },
                         ticks: {
-                          color: '#0015FF'
+                          color: '#FFFFFF'
                         }
                       },
                       x: {
                         grid: {
-                          color: 'rgba(0, 21, 255, 0.1)'
+                          color: 'rgba(255, 255, 255, 0.1)'
                         },
                         ticks: {
-                          color: '#0015FF'
+                          color: '#FFFFFF'
                         }
                       }
                     }
@@ -461,7 +461,7 @@ const Dashboard = () => {
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'center',
-                  color: '#0015FF' 
+                  color: '#FFFFFF' 
                 }}>
                   Carregando gráfico...
                 </div>
