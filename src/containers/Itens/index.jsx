@@ -245,6 +245,38 @@ const Itens = () => {
     }
   };
 
+  // Função para formatar data corretamente
+  const formatarData = (data) => {
+    if (!data) return 'Não disponível';
+    try {
+      // Remove qualquer caractere inválido e garante que é uma string válida
+      const dataLimpa = String(data).trim();
+      
+      if (!dataLimpa || dataLimpa === 'null' || dataLimpa === 'undefined') {
+        return 'Data não disponível';
+      }
+      
+      const dataObj = new Date(dataLimpa);
+      
+      // Verifica se a data é válida
+      if (isNaN(dataObj.getTime())) {
+        console.error('Data inválida:', data);
+        return 'Data inválida';
+      }
+      
+      return dataObj.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Erro ao formatar data:', error, 'Data original:', data);
+      return 'Erro na data';
+    }
+  };
+
   useEffect(() => {
     const handleResize = () => {
       setSidebarOpen(window.innerWidth > 900);
@@ -550,14 +582,14 @@ const Itens = () => {
                 <DetailsRow>
                   <DetailsLabel>Criado em:</DetailsLabel>
                   <DetailsValue>
-                    {new Date(selectedItem.created_at).toLocaleString('pt-BR')}
+                    {formatarData(selectedItem.createdAt || selectedItem.created_at)}
                   </DetailsValue>
                 </DetailsRow>
                 
                 <DetailsRow>
                   <DetailsLabel>Atualizado em:</DetailsLabel>
                   <DetailsValue>
-                    {new Date(selectedItem.updated_at).toLocaleString('pt-BR')}
+                    {formatarData(selectedItem.updatedAt || selectedItem.updated_at)}
                   </DetailsValue>
                 </DetailsRow>
 

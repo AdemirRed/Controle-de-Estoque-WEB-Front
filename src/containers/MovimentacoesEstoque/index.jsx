@@ -31,6 +31,39 @@ const MovimentacoesEstoque = () => {
     observacao: ''
   });
 
+  // Função para formatar data corretamente
+  const formatarData = (dataString) => {
+    try {
+      if (!dataString) return 'Data não disponível';
+      
+      // Remove qualquer caractere inválido e garante que é uma string válida
+      const dataLimpa = String(dataString).trim();
+      
+      if (!dataLimpa || dataLimpa === 'null' || dataLimpa === 'undefined') {
+        return 'Data não disponível';
+      }
+      
+      const data = new Date(dataLimpa);
+      
+      // Verifica se a data é válida
+      if (isNaN(data.getTime())) {
+        console.error('Data inválida:', dataString);
+        return 'Data inválida';
+      }
+      
+      return data.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Erro ao formatar data:', error, 'Data original:', dataString);
+      return 'Erro na data';
+    }
+  };
+
   // Paginação
   const [pagina, setPagina] = useState(1);
   const movsPorPagina = 20;
@@ -73,6 +106,7 @@ const MovimentacoesEstoque = () => {
   const loadMovimentacoes = async () => {
     try {
       const response = await api.get('/movimentacoes-estoque');
+      
       const movimentacoesCompletas = await Promise.all(
         response.data.map(async (mov) => {
           try {
@@ -325,7 +359,7 @@ const MovimentacoesEstoque = () => {
                     <td>{mov.quantidade}</td>
                     <td>{mov.tipo}</td>
                     <td>{mov.usuario_nome}</td>
-                    <td>{new Date(mov.created_at).toLocaleDateString()}</td>
+                    <td>{formatarData(mov.data_movimentacao || mov.createdAt || mov.created_at)}</td>
                     <td>
                       <button onClick={() => handleDelete(mov.id)}>Excluir</button>
                     </td>

@@ -168,9 +168,31 @@ function Fornecedores() {
   const formatarData = (data) => {
     if (!data) return 'Não disponível';
     try {
-      return new Date(data).toLocaleString('pt-BR');
+      // Remove qualquer caractere inválido e garante que é uma string válida
+      const dataLimpa = String(data).trim();
+      
+      if (!dataLimpa || dataLimpa === 'null' || dataLimpa === 'undefined') {
+        return 'Data não disponível';
+      }
+      
+      const dataObj = new Date(dataLimpa);
+      
+      // Verifica se a data é válida
+      if (isNaN(dataObj.getTime())) {
+        console.error('Data inválida:', data);
+        return 'Data inválida';
+      }
+      
+      return dataObj.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     } catch (error) {
-      return 'Data inválida';
+      console.error('Erro ao formatar data:', error, 'Data original:', data);
+      return 'Erro na data';
     }
   };
 

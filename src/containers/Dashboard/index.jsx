@@ -97,11 +97,6 @@ const Dashboard = () => {
         const movimentacoes = Array.isArray(movimentacoesResponse.data) ? movimentacoesResponse.data : [];
         const pedidosPendentesTotal = pedidosPendentesResponse.data?.total || 0;
 
-        console.log('📊 Debug Dashboard:');
-        console.log('Movimentações recebidas:', movimentacoes.length);
-        console.log('Primeira movimentação:', movimentacoes[0]);
-        console.log('Campos de data disponíveis:', movimentacoes[0] ? Object.keys(movimentacoes[0]).filter(key => key.includes('data') || key.includes('created') || key.includes('At')) : 'nenhum');
-
         // Calcula o valor total em estoque
         const valorTotal = itens.reduce((total, item) => {
           return total + (Number(item.preco) || 0) * (Number(item.quantidade) || 0);
@@ -155,16 +150,12 @@ const Dashboard = () => {
           const saidas = movimentacoesDia.filter(mov => mov.tipo === 'saida')
             .reduce((total, mov) => total + Number(mov.quantidade), 0);
 
-          console.log(`📅 ${data.toLocaleDateString('pt-BR')}: ${movimentacoesDia.length} movimentações, ${entradas} entradas, ${saidas} saídas`);
-
           return {
             data: data.toLocaleDateString('pt-BR'),
             entradas,
             saidas
           };
         });
-
-        console.log('📊 Dados do gráfico processados:', dadosGrafico);
 
         setChartData({
           labels: dadosGrafico.map(d => d.data),

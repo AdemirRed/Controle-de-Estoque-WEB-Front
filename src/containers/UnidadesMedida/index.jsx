@@ -55,6 +55,38 @@ const UnidadesMedida = () => {
     if (window.innerWidth <= 900) setSidebarOpen(false);
   };
 
+  // Função para formatar data corretamente
+  const formatarData = (data) => {
+    if (!data) return 'Não disponível';
+    try {
+      // Remove qualquer caractere inválido e garante que é uma string válida
+      const dataLimpa = String(data).trim();
+      
+      if (!dataLimpa || dataLimpa === 'null' || dataLimpa === 'undefined') {
+        return 'Data não disponível';
+      }
+      
+      const dataObj = new Date(dataLimpa);
+      
+      // Verifica se a data é válida
+      if (isNaN(dataObj.getTime())) {
+        console.error('Data inválida:', data);
+        return 'Data inválida';
+      }
+      
+      return dataObj.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Erro ao formatar data:', error, 'Data original:', data);
+      return 'Erro na data';
+    }
+  };
+
   const carregarUnidades = async () => {
     try {
       setLoading(true);
@@ -363,8 +395,8 @@ const UnidadesMedida = () => {
                     <tr key={unidade.id}>
                       <Td>{unidade.nome}</Td>
                       <Td>{unidade.sigla}</Td>
-                      <Td>{new Date(unidade.created_at).toLocaleString('pt-BR')}</Td>
-                      <Td>{new Date(unidade.updated_at).toLocaleString('pt-BR')}</Td>
+                      <Td>{formatarData(unidade.createdAt || unidade.created_at)}</Td>
+                      <Td>{formatarData(unidade.updatedAt || unidade.updated_at)}</Td>
                       <Td>
                         <Button
                           type="button"
