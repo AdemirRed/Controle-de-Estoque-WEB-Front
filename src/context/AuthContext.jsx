@@ -12,7 +12,7 @@ const api = axios.create({
       'Accept': 'application/json',
       'Access-Control-Allow-Origin': '*'
     },
-    timeout: 100000 // 100 segundos de timeout
+    timeout: 30000 // 30 segundos de timeout
 });
 
 // Interceptor para adicionar o token em todas as requisições
