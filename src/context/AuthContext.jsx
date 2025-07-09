@@ -4,16 +4,23 @@ import { toast } from 'react-toastify';
 
 const AuthContext = createContext({});
 
-// Configuração base do axios usando a variável de ambiente
+// Configuração base do axios usando proxy local
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || '/auth', // Usa a URL da API ou fallback para o proxy
+    baseURL: '/', // Usar base relativa para o proxy do Vite funcionar
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Access-Control-Allow-Origin': '*'
+      'Accept': 'application/json'
     },
-    timeout: 30000 // 30 segundos de timeout
+    timeout: 30000, // 30 segundos de timeout
+    withCredentials: false // Desabilitar credentials para evitar problemas de CORS
 });
+
+// Debug temporário
+console.log('🔧 DEBUG API CONFIG:');
+console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
+console.log('BaseURL final:', api.defaults.baseURL);
+console.log('Modo proxy: URLs relativas via Vite');
+console.log('====================');
 
 // Interceptor para adicionar o token em todas as requisições
 api.interceptors.request.use((config) => {
