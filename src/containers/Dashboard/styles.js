@@ -152,19 +152,28 @@ export const ChartSection = styled.div`
   padding: 24px;
   border-radius: 14px;
   margin-top: 32px;
-  box-shadow: 0 2px 16px #10131a33;
+  box-shadow: 0 4px 20px rgba(16, 19, 26, 0.4);
   height: 400px;
   display: flex;
   flex-direction: column;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 
   .chart-container {
     flex: 1;
     min-height: 0;
     position: relative;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
   }
 
   @media (max-width: 900px) {
     padding: 12px;
     height: 320px;
+    
+    .chart-container {
+      padding: 8px;
+    }
   }
 `;

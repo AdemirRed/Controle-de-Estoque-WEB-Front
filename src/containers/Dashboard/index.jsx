@@ -155,12 +155,16 @@ const Dashboard = () => {
           const saidas = movimentacoesDia.filter(mov => mov.tipo === 'saida')
             .reduce((total, mov) => total + Number(mov.quantidade), 0);
 
+          console.log(`📅 ${data.toLocaleDateString('pt-BR')}: ${movimentacoesDia.length} movimentações, ${entradas} entradas, ${saidas} saídas`);
+
           return {
             data: data.toLocaleDateString('pt-BR'),
             entradas,
             saidas
           };
         });
+
+        console.log('📊 Dados do gráfico processados:', dadosGrafico);
 
         setChartData({
           labels: dadosGrafico.map(d => d.data),
@@ -169,13 +173,29 @@ const Dashboard = () => {
               label: 'Entradas',
               data: dadosGrafico.map(d => d.entradas),
               borderColor: 'rgb(75, 192, 192)',
-              tension: 0.1
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+              fill: true,
+              tension: 0.4,
+              borderWidth: 3,
+              pointRadius: 6,
+              pointHoverRadius: 8,
+              pointBackgroundColor: 'rgb(75, 192, 192)',
+              pointBorderColor: '#FFFFFF',
+              pointBorderWidth: 2
             },
             {
               label: 'Saídas',
               data: dadosGrafico.map(d => d.saidas),
               borderColor: 'rgb(255, 99, 132)',
-              tension: 0.1
+              backgroundColor: 'rgba(255, 99, 132, 0.2)',
+              fill: true,
+              tension: 0.4,
+              borderWidth: 3,
+              pointRadius: 6,
+              pointHoverRadius: 8,
+              pointBackgroundColor: 'rgb(255, 99, 132)',
+              pointBorderColor: '#FFFFFF',
+              pointBorderWidth: 2
             }
           ]
         });
@@ -426,36 +446,89 @@ const Dashboard = () => {
                   options={{
                     responsive: true,
                     maintainAspectRatio: true,
+                    interaction: {
+                      intersect: false,
+                      mode: 'index'
+                    },
                     plugins: {
                       legend: {
                         position: 'top',
                         labels: {
-                          color: '#FFFFFF'
+                          color: '#FFFFFF',
+                          padding: 20,
+                          usePointStyle: true,
+                          pointStyle: 'circle',
+                          font: {
+                            size: 14,
+                            weight: '500'
+                          }
                         }
                       },
                       title: {
                         display: true,
                         text: 'Movimentações dos Últimos 7 Dias',
-                        color: '#FFFFFF'
+                        color: '#FFFFFF',
+                        font: {
+                          size: 16,
+                          weight: 'bold'
+                        },
+                        padding: {
+                          top: 10,
+                          bottom: 30
+                        }
+                      },
+                      tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#FFFFFF',
+                        bodyColor: '#FFFFFF',
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        padding: 12
                       }
                     },
                     scales: {
                       y: {
                         beginAtZero: true,
                         grid: {
-                          color: 'rgba(255, 255, 255, 0.1)'
+                          color: 'rgba(255, 255, 255, 0.1)',
+                          lineWidth: 1
                         },
                         ticks: {
-                          color: '#FFFFFF'
+                          color: '#FFFFFF',
+                          font: {
+                            size: 12
+                          },
+                          padding: 8
+                        },
+                        border: {
+                          color: 'rgba(255, 255, 255, 0.2)'
                         }
                       },
                       x: {
                         grid: {
-                          color: 'rgba(255, 255, 255, 0.1)'
+                          color: 'rgba(255, 255, 255, 0.1)',
+                          lineWidth: 1
                         },
                         ticks: {
-                          color: '#FFFFFF'
+                          color: '#FFFFFF',
+                          font: {
+                            size: 12
+                          },
+                          padding: 8
+                        },
+                        border: {
+                          color: 'rgba(255, 255, 255, 0.2)'
                         }
+                      }
+                    },
+                    elements: {
+                      line: {
+                        borderJoinStyle: 'round',
+                        borderCapStyle: 'round'
+                      },
+                      point: {
+                        hoverBorderWidth: 3
                       }
                     }
                   }}
