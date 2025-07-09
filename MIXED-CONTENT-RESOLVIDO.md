@@ -8,7 +8,7 @@
 - Procure por mensagens como:
   ```
   Mixed Content: The page at 'https://...' was loaded over HTTPS, 
-  but requested an insecure resource 'http://...'
+  but requested an insecure resource 'https://...'
   ```
 
 ### 2. **Verifique a aba Security:**
@@ -54,10 +54,10 @@ Após o deploy (2-3 minutos):
 ## 🔧 **SE AINDA APARECER O AVISO:**
 
 ### Verifique no Console se há:
-- **Imagens HTTP:** `http://example.com/image.jpg`
-- **APIs HTTP:** `http://api.example.com/data`
-- **Scripts HTTP:** `http://cdn.example.com/script.js`
-- **Fontes HTTP:** `http://fonts.example.com/font.woff`
+- **Imagens HTTP:** `https://example.com/image.jpg`
+- **APIs HTTP:** `https://api.example.com/data`
+- **Scripts HTTP:** `https://cdn.example.com/script.js`
+- **Fontes HTTP:** `https://fonts.example.com/font.woff`
 
 ### Soluções:
 - **Troque HTTP por HTTPS** nos recursos
