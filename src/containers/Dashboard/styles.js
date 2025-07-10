@@ -192,6 +192,7 @@ export const ChartSection = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.1);
   max-width: 100%;
   overflow: hidden;
+  width: 100%;
 
   .chart-container {
     flex: 1;
@@ -208,6 +209,12 @@ export const ChartSection = styled.div`
     canvas, svg {
       max-width: 100% !important;
       height: auto !important;
+      width: 100% !important;
+    }
+    
+    /* Força redimensionamento em dispositivos móveis */
+    canvas {
+      touch-action: manipulation;
     }
   }
 
@@ -231,7 +238,21 @@ export const ChartSection = styled.div`
   }
   
   @media (max-width: 480px) {
-    height: 250px;
+    height: 280px;
     padding: 8px;
+    margin-top: 16px;
+    
+    .chart-container {
+      padding: 4px;
+    }
+  }
+  
+  @media (max-width: 360px) {
+    height: 250px;
+    padding: 6px;
+    
+    .chart-container {
+      padding: 2px;
+    }
   }
 `;

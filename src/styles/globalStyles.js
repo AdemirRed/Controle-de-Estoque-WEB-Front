@@ -125,17 +125,40 @@ const GlobalStyles = createGlobalStyle`
     height: auto !important;
     max-width: 100% !important;
     overflow: hidden !important;
+    position: relative !important;
   }
   
   .chart-container {
     width: 100% !important;
     max-width: 100% !important;
     overflow: hidden !important;
+    position: relative !important;
     
     canvas, svg {
       max-width: 100% !important;
       height: auto !important;
       width: 100% !important;
+      display: block !important;
+    }
+    
+    canvas {
+      /* Força redimensionamento no mobile */
+      touch-action: manipulation !important;
+      image-rendering: -webkit-optimize-contrast !important;
+      image-rendering: optimize-contrast !important;
+    }
+  }
+  
+  /* Força atualização de gráficos em mudança de orientação */
+  @media screen and (orientation: portrait) {
+    .chart-container canvas {
+      max-width: 100vw !important;
+    }
+  }
+  
+  @media screen and (orientation: landscape) {
+    .chart-container canvas {
+      max-width: 100vw !important;
     }
   }
 

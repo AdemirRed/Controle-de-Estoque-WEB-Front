@@ -60,6 +60,7 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [chartData, setChartData] = useState(null);
+  const [chartKey, setChartKey] = useState(0); // Para forçar re-render do gráfico
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
 
   // Fecha o menu lateral ao navegar em telas pequenas
@@ -75,6 +76,29 @@ const Dashboard = () => {
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Hook para detectar mudanças de orientação e redimensionamento
+  useEffect(() => {
+    const handleResize = () => {
+      // Força re-render do gráfico para garantir responsividade
+      setChartKey(prev => prev + 1);
+    };
+
+    const handleOrientationChange = () => {
+      // Aguarda um pouco para a orientação se estabilizar
+      setTimeout(() => {
+        setChartKey(prev => prev + 1);
+      }, 300);
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleOrientationChange);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleOrientationChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -433,39 +457,51 @@ const Dashboard = () => {
             <div className="chart-container chart-responsive">
               {chartData ? (
                 <Line
+                  key={chartKey}
                   data={chartData}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
+                    devicePixelRatio: window.devicePixelRatio || 1,
+                    resizeDelay: 200,
                     interaction: {
                       intersect: false,
                       mode: 'index'
                     },
+                    layout: {
+                      padding: {
+                        top: 10,
+                        right: 10,
+                        bottom: 10,
+                        left: 10
+                      }
+                    },
                     plugins: {
                       legend: {
-                        position: 'top',
+                        position: window.innerWidth <= 768 ? 'bottom' : 'top',
                         labels: {
                           color: '#FFFFFF',
-                          padding: 20,
+                          padding: window.innerWidth <= 768 ? 10 : 20,
                           usePointStyle: true,
                           pointStyle: 'circle',
                           font: {
-                            size: 14,
+                            size: window.innerWidth <= 768 ? 11 : 14,
                             weight: '500'
-                          }
+                          },
+                          boxWidth: window.innerWidth <= 768 ? 15 : 20
                         }
                       },
                       title: {
-                        display: true,
+                        display: window.innerWidth > 480,
                         text: 'Movimentações dos Últimos 7 Dias',
                         color: '#FFFFFF',
                         font: {
-                          size: 16,
+                          size: window.innerWidth <= 768 ? 14 : 16,
                           weight: 'bold'
                         },
                         padding: {
                           top: 10,
-                          bottom: 30
+                          bottom: window.innerWidth <= 768 ? 15 : 30
                         }
                       },
                       tooltip: {
@@ -475,7 +511,13 @@ const Dashboard = () => {
                         borderColor: 'rgba(255, 255, 255, 0.2)',
                         borderWidth: 1,
                         cornerRadius: 8,
-                        padding: 12
+                        padding: window.innerWidth <= 768 ? 8 : 12,
+                        titleFont: {
+                          size: window.innerWidth <= 768 ? 11 : 13
+                        },
+                        bodyFont: {
+                          size: window.innerWidth <= 768 ? 10 : 12
+                        }
                       }
                     },
                     scales: {
@@ -488,9 +530,10 @@ const Dashboard = () => {
                         ticks: {
                           color: '#FFFFFF',
                           font: {
-                            size: 12
+                            size: window.innerWidth <= 768 ? 10 : 12
                           },
-                          padding: 8
+                          padding: window.innerWidth <= 768 ? 4 : 8,
+                          maxTicksLimit: window.innerWidth <= 768 ? 6 : 10
                         },
                         border: {
                           color: 'rgba(255, 255, 255, 0.2)'
@@ -504,9 +547,11 @@ const Dashboard = () => {
                         ticks: {
                           color: '#FFFFFF',
                           font: {
-                            size: 12
+                            size: window.innerWidth <= 768 ? 9 : 12
                           },
-                          padding: 8
+                          padding: window.innerWidth <= 768 ? 4 : 8,
+                          maxRotation: window.innerWidth <= 768 ? 45 : 0,
+                          minRotation: window.innerWidth <= 768 ? 45 : 0
                         },
                         border: {
                           color: 'rgba(255, 255, 255, 0.2)'
@@ -516,11 +561,18 @@ const Dashboard = () => {
                     elements: {
                       line: {
                         borderJoinStyle: 'round',
-                        borderCapStyle: 'round'
+                        borderCapStyle: 'round',
+                        borderWidth: window.innerWidth <= 768 ? 2 : 3
                       },
                       point: {
-                        hoverBorderWidth: 3
+                        hoverBorderWidth: window.innerWidth <= 768 ? 2 : 3,
+                        radius: window.innerWidth <= 768 ? 3 : 5,
+                        hoverRadius: window.innerWidth <= 768 ? 5 : 7
                       }
+                    },
+                    onResize: (chart, size) => {
+                      // Força atualização quando o tamanho muda
+                      chart.update('none');
                     }
                   }}
                 />
