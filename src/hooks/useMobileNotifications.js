@@ -51,7 +51,10 @@ export const useMobileNotifications = () => {
 
   // Enviar notificação
   const sendNotification = async (title, body, action = '/dashboard') => {
+    console.log('Enviando notificação móvel:', { title, body, action, permission });
+    
     if (permission !== 'granted') {
+      console.log('Permissão não concedida, tentando solicitar...');
       const newPermission = await requestPermission();
       if (newPermission !== 'granted') {
         console.log('Permissão de notificação negada');
@@ -61,7 +64,9 @@ export const useMobileNotifications = () => {
 
     try {
       if (isMobile() && swRegistration) {
-        // Usar Service Worker para dispositivos móveis
+        console.log('Usando Service Worker para notificação móvel');
+        
+        // Primeiro tentar Service Worker
         if (navigator.serviceWorker.controller) {
           navigator.serviceWorker.controller.postMessage({
             type: 'SHOW_NOTIFICATION',
@@ -75,7 +80,7 @@ export const useMobileNotifications = () => {
             body,
             icon: '/icon.png',
             badge: '/icon.png',
-            tag: 'controle-estoque-mobile',
+            tag: `controle-estoque-mobile-${Date.now()}`,
             data: { action },
             vibrate: [200, 100, 200],
             requireInteraction: false,
@@ -88,29 +93,56 @@ export const useMobileNotifications = () => {
           });
         }
       } else {
-        // Usar Notification API padrão para desktop
+        console.log('Usando Notification API padrão');
+        
+        // Usar Notification API padrão para desktop ou quando SW não está disponível
         const notification = new Notification(title, {
           body,
           icon: '/icon.png',
-          tag: 'controle-estoque-desktop',
-          data: { action }
+          badge: '/icon.png',
+          tag: `controle-estoque-desktop-${Date.now()}`,
+          data: { action },
+          vibrate: isMobile() ? [200, 100, 200] : undefined,
+          requireInteraction: !isMobile()
         });
 
         notification.onclick = () => {
+          console.log('Clique na notificação:', action);
           window.focus();
           const targetUrl = action.startsWith('/') ? window.location.origin + action : action;
           window.location.href = targetUrl;
           notification.close();
         };
 
-        // Auto-fechar após 8 segundos
-        setTimeout(() => notification.close(), 8000);
+        // Auto-fechar após tempo determinado
+        const autoCloseTime = isMobile() ? 8000 : 15000;
+        setTimeout(() => notification.close(), autoCloseTime);
       }
 
       return true;
     } catch (error) {
       console.error('Erro ao enviar notificação:', error);
-      return false;
+      
+      // Último fallback: tentar Notification API básica
+      try {
+        const basicNotification = new Notification(title, {
+          body,
+          icon: '/icon.png'
+        });
+        
+        basicNotification.onclick = () => {
+          window.focus();
+          const targetUrl = action.startsWith('/') ? window.location.origin + action : action;
+          window.location.href = targetUrl;
+          basicNotification.close();
+        };
+        
+        setTimeout(() => basicNotification.close(), 8000);
+        return true;
+      } catch (fallbackError) {
+        console.error('Fallback também falhou:', fallbackError);
+        return false;
+      }
     }
   };
 
