@@ -1,4 +1,4 @@
-# Headers para resolver CORS e Mixed Content
+# Headers para CORS e segurança
 [[headers]]
   for = "/*"
   [headers.values]
@@ -13,41 +13,6 @@
     X-Content-Type-Options = "nosniff"
     X-Frame-Options = "DENY"
     X-XSS-Protection = "1; mode=block"
-
-[[headers]]
-  for = "/api/*"
-  [headers.values]
-    Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type, Authorization, Accept"
-
-# Redirects com force para garantir que funcionem
-[[redirects]]
-  from = "/api/*"
-  to = "https://controle-de-estoque-web-api.onrender.com/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/sessao"
-  to = "https://controle-de-estoque-web-api.onrender.com/sessao"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/usuarios/*"
-  to = "https://controle-de-estoque-web-api.onrender.com/usuarios/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/itens/*"
-  to = "https://controle-de-estoque-web-api.onrender.com/itens/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/item-requests/*"
   to = "https://controle-de-estoque-web-api.onrender.com/item-requests/:splat"
   status = 200
   force = true
@@ -72,11 +37,4 @@
 
 [[redirects]]
   from = "/relatorios/*"
-  to = "https://controle-de-estoque-web-api.onrender.com/relatorios/:splat"
-  status = 200
-  force = true
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
