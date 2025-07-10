@@ -35,11 +35,7 @@ import {
   Label,
   Layout,
   MainContent,
-  Table,
-  TableContainer,
-  Td,
   TextArea,
-  Th,
   Title
 } from './styles';
 
@@ -606,15 +602,15 @@ const Itens = () => {
             </FormContainer>
           )}
 
-          <TableContainer>
-            <Table>
+          <div className="table-wrapper">
+            <table>
               <thead>
                 <tr>
-                  <Th>Nome</Th>
-                  <Th>Quantidade</Th>
-                  <Th>Qtd. Mínima</Th>
-                  {isAdmin && <Th>Preço</Th>} {/* Mostrar preço apenas para administradores */}
-                  <Th>Ações</Th>
+                  <th>Nome</th>
+                  <th>Quantidade</th>
+                  <th>Qtd. Mínima</th>
+                  {isAdmin && <th>Preço</th>} {/* Mostrar preço apenas para administradores */}
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -670,14 +666,14 @@ const Itens = () => {
                   ))
                 )}
               </tbody>
-            </Table>
+            </table>
             <Paginacao
               pagina={pagina}
               totalPaginas={totalPaginas}
               onPaginaAnterior={() => setPagina((p) => Math.max(1, p - 1))}
               onPaginaProxima={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
             />
-          </TableContainer>
+          </div>
         </Container>
       </MainContent>
     </Layout>

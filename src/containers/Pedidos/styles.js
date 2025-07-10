@@ -8,13 +8,19 @@ export const Container = styled.div`
   margin-top: 64px;
   min-height: calc(100vh - 64px);
   width: 100%;
+  max-width: 100vw;
   box-sizing: border-box;
   background-color: #0a1929;
   color: #f3f6f9;
+  overflow-x: hidden;
 
   @media (max-width: 900px) {
     padding: 10px 2vw;
     margin-top: 56px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 8px 1vw;
   }
 `;
 
@@ -276,7 +282,7 @@ export const RequestItem = styled.li`
   border: 1px solid #00eaff33;
   transition: box-shadow 0.2s, transform 0.2s;
   min-width: 0;
-  width: 85%;
+  width: 100%;
   max-width: 350px;
   min-height: 180px;
   margin: 0px auto;
@@ -285,6 +291,17 @@ export const RequestItem = styled.li`
     box-shadow: 0 8px 36px 0 #00eaff22;
     transform: translateY(-2px) scale(1.03);
   }
+  
+  @media (max-width: 768px) {
+    max-width: 100%;
+    padding: 16px 20px;
+    min-height: 160px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 12px 16px;
+    min-height: 140px;
+  }
 `;
 
 export const RequestList = styled.ul`
@@ -292,11 +309,19 @@ export const RequestList = styled.ul`
   padding: 0;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 24px;
-  max-width: 1100px;
+  max-width: 100%;
+  width: 100%;
   justify-items: center;
   justify-content: center;
+  overflow-x: hidden;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 0 8px;
+  }
 `;
 
 export const SidebarButton = styled.button`
@@ -353,7 +378,9 @@ export const MainContainer = styled.div`
   flex-direction: column;
   min-height: 100vh;
   width: 100%;
+  max-width: 100vw;
   padding: 0;
+  overflow-x: hidden;
 `;
 
 export const NewRequestContainer = styled.div`

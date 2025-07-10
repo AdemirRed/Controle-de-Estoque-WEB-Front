@@ -11,12 +11,20 @@ export const Container = styled.div`
   background: linear-gradient(120deg, #181c24 0%, #232a36 100%);
   min-height: 100vh;
   animation: ${subtleGradient} 24s linear infinite;
+  max-width: 100vw;
+  overflow-x: hidden;
+  
+  @media (max-width: 768px) {
+    padding: 10px;
+  }
 `;
 
 export const Layout = styled.div`
   display: flex;
   min-height: 100vh;
   background: transparent;
+  max-width: 100vw;
+  overflow-x: hidden;
 `;
 
 export const Sidebar = styled.div`
@@ -24,11 +32,22 @@ export const Sidebar = styled.div`
   background: #181c24;
   padding: 20px;
   box-shadow: 2px 0 8px #10131a33;
+  
+  @media (max-width: 768px) {
+    width: 200px;
+    padding: 15px;
+  }
+  
+  @media (max-width: 480px) {
+    display: none; /* Esconder sidebar em telas muito pequenas */
+  }
 `;
 
 export const MainContent = styled.div`
   flex: 1;
   background: transparent;
+  min-width: 0; /* Importante para flex items */
+  overflow-x: hidden;
 `;
 
 export const Header = styled.header`
@@ -94,13 +113,19 @@ export const MenuItem = styled.div`
 
 export const DashboardGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 24px;
   margin-top: 20px;
+  max-width: 100%;
 
   @media (max-width: 900px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 16px;
+  }
+  
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 `;
 
@@ -157,6 +182,8 @@ export const ChartSection = styled.div`
   display: flex;
   flex-direction: column;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  max-width: 100%;
+  overflow: hidden;
 
   .chart-container {
     flex: 1;
@@ -166,14 +193,37 @@ export const ChartSection = styled.div`
     background: rgba(255, 255, 255, 0.02);
     border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.05);
+    width: 100%;
+    overflow: hidden;
+    
+    /* Garantir que gráficos sejam responsivos */
+    canvas, svg {
+      max-width: 100% !important;
+      height: auto !important;
+    }
   }
 
   @media (max-width: 900px) {
-    padding: 12px;
-    height: 320px;
+    padding: 16px;
+    height: 350px;
+    margin-top: 20px;
     
     .chart-container {
       padding: 8px;
     }
+  }
+  
+  @media (max-width: 600px) {
+    padding: 12px;
+    height: 300px;
+    
+    .chart-container {
+      padding: 6px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    height: 250px;
+    padding: 8px;
   }
 `;

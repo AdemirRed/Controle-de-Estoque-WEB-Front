@@ -10,12 +10,19 @@ export const Layout = styled.div`
   display: flex;
   min-height: 100vh;
   background: linear-gradient(120deg, #181c24 0%, #232a36 100%);
+  background-attachment: fixed;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
   animation: ${subtleGradient} 24s linear infinite;
+  max-width: 100vw;
+  overflow-x: hidden;
 `;
 
 export const MainContent = styled.div`
   flex: 1;
   background: transparent;
+  min-width: 0;
+  overflow-x: hidden;
 `;
 
 export const Sidebar = styled.div`
@@ -77,6 +84,16 @@ export const Container = styled.div`
   padding: 20px;
   width: 100%;
   background: transparent;
+  max-width: 100%;
+  overflow-x: hidden;
+  
+  @media (max-width: 768px) {
+    padding: 15px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 10px;
+  }
 `;
 
 export const Title = styled.h1`
@@ -88,46 +105,9 @@ export const Title = styled.h1`
   text-shadow: 0 2px 8px #10131a;
 `;
 
-export const TableContainer = styled.div`
-  width: 100%;
-  background: #232a36;
-  border-radius: 12px;
-  box-shadow: 0 2px 16px #10131a33;
-  overflow: hidden;
-`;
+/* Componente removido - usando estilos globais para tabelas */
 
-export const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-`;
-
-export const Th = styled.th`
-  padding: 15px;
-  text-align: left;
-  border-bottom: 2px solid #232a36;
-  color: #00eaff;
-  font-weight: 700;
-  background-color: #181c24;
-`;
-
-export const Td = styled.td`
-  padding: 12px 15px;
-  border-bottom: 1px solid #232a36;
-  color: #eaf6fb;
-
-  &.nome-item {
-    font-weight: 600;
-    font-size: 1.1em;
-    color: #00eaff;
-  }
-
-  &:last-child {
-    display: flex;
-    gap: 4px;
-    justify-content: flex-start;
-    align-items: center;
-  }
-`;
+/* Componentes removidos - usando estilos globais para tabelas */
 
 export const ActionButtonGroup = styled.div`
   display: flex;

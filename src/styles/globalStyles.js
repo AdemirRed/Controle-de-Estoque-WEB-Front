@@ -11,8 +11,23 @@ const GlobalStyles = createGlobalStyle`
     text-decoration: none;
   }
 
+  html, body {
+    overflow-x: hidden; /* Previne scroll horizontal */
+    max-width: 100vw;
+    width: 100%;
+  }
+
   body {
-    background-color:rgb(17 24 39 / var(--tw-bg-opacity, 1))
+    background-color: rgb(17 24 39 / var(--tw-bg-opacity, 1));
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Container principal para evitar overflow */
+  #root {
+    max-width: 100vw;
+    overflow-x: hidden;
+    width: 100%;
   }
 
   a {
@@ -25,6 +40,90 @@ const GlobalStyles = createGlobalStyle`
 
   input, button {
     background-color: inherit;
+  }
+
+  /* Tabelas responsivas - scroll interno */
+  .table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 70vh; /* Altura máxima para scroll vertical */
+    background: #232a36;
+    border-radius: 12px;
+    box-shadow: 0 2px 16px #10131a33;
+    
+    /* Estilização da barra de scroll */
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: #181c24;
+      border-radius: 4px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: #00b4d8;
+      border-radius: 4px;
+    }
+    
+    &::-webkit-scrollbar-thumb:hover {
+      background: #0077b6;
+    }
+    
+    /* Tabela dentro do wrapper */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px; /* Largura mínima para funcionalidade completa */
+      
+      th, td {
+        padding: 12px 10px;
+        text-align: left;
+        border-bottom: 1px solid #2a3441;
+        white-space: nowrap;
+      }
+      
+      th {
+        background: #181c24;
+        color: #00eaff;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      
+      td {
+        color: #eaf6fb;
+      }
+      
+      tr:hover {
+        background-color: rgba(0, 180, 216, 0.1);
+      }
+    }
+  }
+
+  /* Responsividade para gráficos */
+  .chart-responsive {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+  
+  .chart-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    
+    canvas, svg {
+      max-width: 100% !important;
+      height: auto !important;
+      width: 100% !important;
+    }
   }
 
   /* Botões de paginação globais */
@@ -52,6 +151,51 @@ const GlobalStyles = createGlobalStyle`
     background: linear-gradient(135deg, #0077b6 0%, #00b4d8 100%);
     transform: translateY(-2px) scale(1.04);
     box-shadow: 0 4px 16px #00b4d855;
+  }
+
+  /* Responsividade mobile */
+  @media (max-width: 768px) {
+    .table-wrapper {
+      max-height: 60vh;
+      
+      table {
+        min-width: 500px;
+        
+        th, td {
+          padding: 8px;
+          font-size: 0.9rem;
+        }
+      }
+    }
+    
+    .chart-container {
+      padding: 8px !important;
+    }
+    
+    .paginacao-btn {
+      padding: 4px 12px;
+      font-size: 0.9rem;
+      margin: 0 2px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .table-wrapper {
+      max-height: 50vh;
+      
+      table {
+        min-width: 400px;
+        
+        th, td {
+          padding: 6px;
+          font-size: 0.8rem;
+        }
+      }
+    }
+    
+    .chart-container {
+      padding: 6px !important;
+    }
   }
 `;
 

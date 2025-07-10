@@ -341,32 +341,34 @@ const MovimentacoesEstoque = () => {
 
           <ListContainer>
             <h2>Movimentações Realizadas</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Quantidade</th>
-                  <th>Tipo</th>
-                  <th>Usuário</th>
-                  <th>Data</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {movsPaginados.map((mov) => (
-                  <tr key={mov.id}>
-                    <td>{mov.item_nome}</td>
-                    <td>{mov.quantidade}</td>
-                    <td>{mov.tipo}</td>
-                    <td>{mov.usuario_nome}</td>
-                    <td>{formatarData(mov.data_movimentacao || mov.createdAt || mov.created_at)}</td>
-                    <td>
-                      <button onClick={() => handleDelete(mov.id)}>Excluir</button>
-                    </td>
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Quantidade</th>
+                    <th>Tipo</th>
+                    <th>Usuário</th>
+                    <th>Data</th>
+                    <th>Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {movsPaginados.map((mov) => (
+                    <tr key={mov.id}>
+                      <td>{mov.item_nome}</td>
+                      <td>{mov.quantidade}</td>
+                      <td>{mov.tipo}</td>
+                      <td>{mov.usuario_nome}</td>
+                      <td>{formatarData(mov.data_movimentacao || mov.createdAt || mov.created_at)}</td>
+                      <td>
+                        <button onClick={() => handleDelete(mov.id)}>Excluir</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             {/* Paginação */}
             <Paginacao
               pagina={pagina}

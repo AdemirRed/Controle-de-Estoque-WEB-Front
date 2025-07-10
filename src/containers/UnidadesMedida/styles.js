@@ -12,12 +12,18 @@ export const Container = styled.div`
   margin: 0 auto;
   width: 100%;
   background: linear-gradient(120deg, #181c24 0%, #232a36 100%);
+  background-attachment: fixed;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
   border-radius: 18px;
   box-shadow: 0 2px 16px #10131a33;
   animation: ${subtleGradient} 24s linear infinite;
+  overflow-x: hidden;
+  max-width: 100vw;
 
   @media (max-width: 900px) {
     padding: 1rem;
+    max-width: 100%;
   }
   @media (max-width: 600px) {
     padding: 0.5rem;
@@ -36,62 +42,7 @@ export const Title = styled.h2`
   -webkit-text-fill-color: unset;
 `;
 
-export const TableContainer = styled.div`
-  margin-top: 2rem;
-  overflow-x: auto;
-  background: #232a36;
-  border-radius: 12px;
-  box-shadow: 0 2px 16px #10131a33;
-`;
-
-export const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 600px;
-
-  th, td {
-    padding: 12px 10px;
-    text-align: left;
-    border-bottom: 1px solid #232a36;
-    font-size: 1rem;
-  }
-
-  th {
-    font-weight: 700;
-    background: #181c24;
-    color: #00eaff;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-radius: 6px 6px 0 0;
-    box-shadow: none;
-  }
-
-  td {
-    color: #eaf6fb;
-    font-size: 1rem;
-    text-shadow: none;
-  }
-
-  tr:hover {
-    background: #232a36cc;
-    transition: background 0.2s;
-  }
-
-  @media (max-width: 900px) {
-    th, td {
-      font-size: 0.85rem;
-    }
-  }
-  @media (max-width: 600px) {
-    min-width: 400px;
-    th, td {
-      padding: 8px 6px;
-    }
-  }
-`;
-
-export const Th = styled.th``;
-export const Td = styled.td``;
+/* Componentes removidos - usando estilos globais para tabelas */
 
 export const AddButton = styled.button`
   background: linear-gradient(90deg, #00b4d8 0%, #0077b6 100%);

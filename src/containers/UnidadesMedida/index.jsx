@@ -19,10 +19,6 @@ import {
   FormGroup,
   Input,
   Label,
-  Table,
-  TableContainer,
-  Td,
-  Th,
   Title
 } from './styles';
 
@@ -366,38 +362,38 @@ const UnidadesMedida = () => {
             </FormContainer>
           )}
 
-          <TableContainer>
-            <Table>
+          <div className="table-wrapper">
+            <table>
               <thead>
                 <tr>
-                  <Th>Nome</Th>
-                  <Th>Sigla</Th>
-                  <Th>Data Criação</Th>
-                  <Th>Última Atualização</Th>
-                  <Th>Ações</Th>
+                  <th>Nome</th>
+                  <th>Sigla</th>
+                  <th>Data Criação</th>
+                  <th>Última Atualização</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <Td colSpan="5" style={{ textAlign: 'center' }}>
+                    <td colSpan="5" style={{ textAlign: 'center' }}>
                       Carregando...
-                    </Td>
+                    </td>
                   </tr>
                 ) : unidadesPaginadas.length === 0 ? (
                   <tr>
-                    <Td colSpan="5" style={{ textAlign: 'center' }}>
+                    <td colSpan="5" style={{ textAlign: 'center' }}>
                       Nenhuma unidade de medida encontrada
-                    </Td>
+                    </td>
                   </tr>
                 ) : (
                   unidadesPaginadas.map((unidade) => (
                     <tr key={unidade.id}>
-                      <Td>{unidade.nome}</Td>
-                      <Td>{unidade.sigla}</Td>
-                      <Td>{formatarData(unidade.createdAt || unidade.created_at)}</Td>
-                      <Td>{formatarData(unidade.updatedAt || unidade.updated_at)}</Td>
-                      <Td>
+                      <td>{unidade.nome}</td>
+                      <td>{unidade.sigla}</td>
+                      <td>{formatarData(unidade.createdAt || unidade.created_at)}</td>
+                      <td>{formatarData(unidade.updatedAt || unidade.updated_at)}</td>
+                      <td>
                         <Button
                           type="button"
                           className="primary"
@@ -413,19 +409,19 @@ const UnidadesMedida = () => {
                         >
                           <FaTrash /> Excluir
                         </Button>
-                      </Td>
+                      </td>
                     </tr>
                   ))
                 )}
               </tbody>
-            </Table>
+            </table>
             <Paginacao
               pagina={pagina}
               totalPaginas={totalPaginas}
               onPaginaAnterior={() => setPagina(p => Math.max(1, p - 1))}
               onPaginaProxima={() => setPagina(p => Math.min(totalPaginas, p + 1))}
             />
-          </TableContainer>
+          </div>
         </Container>
       </MainContent>
     </Layout>
