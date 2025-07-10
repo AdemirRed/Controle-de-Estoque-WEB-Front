@@ -100,25 +100,57 @@ const Pedidos = () => {
 
   // Função para resolver nome do usuário
   const resolverNomeUsuario = (pedido) => {
-    // Se já tem o nome direto
-    if (pedido.criado_por && typeof pedido.criado_por === 'string' && !pedido.criado_por.includes('@')) {
+    // Se já tem o nome direto e não é um UUID/ID
+    if (pedido.criado_por && typeof pedido.criado_por === 'string' && 
+        !pedido.criado_por.includes('@') && 
+        !pedido.criado_por.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i) &&
+        !pedido.criado_por.match(/^\d+$/)) {
       return pedido.criado_por;
     }
     
     // Se tem usuario_id, buscar na lista de usuários
     if (pedido.usuario_id && usuarios.length > 0) {
       const usuario = usuarios.find(u => u.id === pedido.usuario_id);
-      if (usuario) return usuario.nome;
+      if (usuario) {
+        return usuario.nome;
+      }
     }
     
-    // Se tem criado_por como ID, buscar na lista
+    // Se criado_por é um UUID ou ID, buscar na lista de usuários
     if (pedido.criado_por && usuarios.length > 0) {
-      const usuario = usuarios.find(u => u.id === parseInt(pedido.criado_por) || u.email === pedido.criado_por);
-      if (usuario) return usuario.nome;
+      // Buscar por ID exato (string ou number)
+      let usuario = usuarios.find(u => String(u.id) === String(pedido.criado_por));
+      
+      // Se não encontrou, buscar por email
+      if (!usuario) {
+        usuario = usuarios.find(u => u.email === pedido.criado_por);
+      }
+      
+      // Se não encontrou, buscar por nome
+      if (!usuario) {
+        usuario = usuarios.find(u => u.nome === pedido.criado_por);
+      }
+      
+      if (usuario) {
+        return usuario.nome;
+      }
     }
     
-    // Fallback
-    return pedido.criado_por || 'Usuário não identificado';
+    // Se tem usuario (objeto completo)
+    if (pedido.usuario && typeof pedido.usuario === 'object') {
+      return pedido.usuario.nome || pedido.usuario.email || 'Usuário não identificado';
+    }
+    
+    // Fallback - se é um UUID ou número, mostrar como "ID não encontrado"
+    if (pedido.criado_por) {
+      if (pedido.criado_por.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i) ||
+          pedido.criado_por.match(/^\d+$/)) {
+        return `ID: ${pedido.criado_por.slice(0, 8)}...`;
+      }
+      return pedido.criado_por;
+    }
+    
+    return 'Usuário não identificado';
   };
 
   // Processar parâmetros da URL para highlight
@@ -203,6 +235,13 @@ const Pedidos = () => {
         setUsuarios(response.data);
       } catch (err) {
         console.error('Erro ao carregar usuários:', err);
+        // Tentar endpoint alternativo se o primeiro falhar
+        try {
+          const response = await api.get('/usuario');
+          setUsuarios(response.data);
+        } catch (altErr) {
+          console.error('Erro no endpoint alternativo também:', altErr);
+        }
       }
     };
     fetchUsuarios();

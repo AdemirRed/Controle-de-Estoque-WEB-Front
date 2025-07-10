@@ -11,6 +11,17 @@ const HeaderComponent = ({ title, user, onLogout }) => {
   const navigate = useNavigate();
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications } = useNotifications();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Detectar mudanças de tamanho da tela
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleNotificationClick = (notification) => {
     markAsRead(notification.id);
@@ -29,14 +40,110 @@ const HeaderComponent = ({ title, user, onLogout }) => {
     setShowNotifications(false);
   };
 
+  // Função para testar notificação de pedido específico
+  const handleTestPedidoNotification = () => {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const testNotification = new Notification('✅ Pedido Aprovado', {
+        body: 'Seu pedido de Mouse Óptico foi aprovado!',
+        icon: '/icon.png',
+        badge: '/icon.png',
+        tag: 'test-pedido-aprovado',
+        requireInteraction: !isMobile,
+        vibrate: isMobile ? [200, 100, 200, 100, 200] : undefined,
+        data: { action: '/pedidos?highlight=123' }
+      });
+
+      testNotification.onclick = () => {
+        console.log('Teste: Redirecionando para pedido específico');
+        if (window.focus) window.focus();
+        navigate('/pedidos?highlight=123');
+        testNotification.close();
+      };
+
+      setTimeout(() => testNotification.close(), isMobile ? 8000 : 15000);
+      toast.success('Teste: Notificação de pedido aprovado enviada!');
+    } else if (Notification.permission !== 'granted') {
+      toast.error('Permita notificações primeiro!');
+    }
+  };
+
+  // Função para testar notificação de requisição
+  const handleTestRequisicaoNotification = () => {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const testNotification = new Notification('📋 Nova Requisição', {
+        body: 'Você tem 2 requisições pendentes para aprovar',
+        icon: '/icon.png',
+        badge: '/icon.png',
+        tag: 'test-requisicao',
+        requireInteraction: !isMobile,
+        vibrate: isMobile ? [100, 50, 100] : undefined,
+        data: { action: '/item-requests' }
+      });
+
+      testNotification.onclick = () => {
+        console.log('Teste: Redirecionando para requisições');
+        if (window.focus) window.focus();
+        navigate('/item-requests');
+        testNotification.close();
+      };
+
+      setTimeout(() => testNotification.close(), isMobile ? 8000 : 15000);
+      toast.success('Teste: Notificação de requisição enviada!');
+    } else if (Notification.permission !== 'granted') {
+      toast.error('Permita notificações primeiro!');
+    }
+  };
+
   // Função de teste para disparar notificação manualmente
   const handleTestNotification = () => {
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Notificação de teste', {
-        body: 'Se você está vendo esta mensagem, as notificações estão funcionando!'
-      });
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if ('Notification' in window) {
+      if (Notification.permission === 'granted') {
+        // Criar notificação de teste com deep linking
+        const testNotification = new Notification('🔔 Teste de Notificação Móvel', {
+          body: `Teste ${isMobile ? 'Mobile' : 'Desktop'} - Clique para ir aos pedidos`,
+          icon: '/icon.png',
+          badge: '/icon.png',
+          tag: 'controle-estoque-test',
+          requireInteraction: !isMobile, // Mobile: auto-fechar, Desktop: manter
+          vibrate: isMobile ? [200, 100, 200] : undefined,
+          data: { action: '/pedidos' },
+          actions: isMobile ? [
+            { action: 'open', title: '📱 Abrir' }
+          ] : undefined
+        });
+
+        testNotification.onclick = () => {
+          console.log('Notificação de teste clicada!');
+          if (window.focus) window.focus();
+          
+          // Redirecionar para pedidos
+          navigate('/pedidos');
+          testNotification.close();
+        };
+
+        // Auto-fechar
+        setTimeout(() => testNotification.close(), isMobile ? 8000 : 15000);
+        
+        toast.success(`Notificação de teste enviada! ${isMobile ? '(Mobile)' : '(Desktop)'}`);
+      } else if (Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            toast.success('Permissão concedida! Clique novamente para testar.');
+          } else {
+            toast.error('Permissão negada. Ative nas configurações do navegador.');
+          }
+        });
+      } else {
+        toast.error('Notificações bloqueadas. Ative nas configurações do navegador.');
+      }
     } else {
-      toast.info('Permissão de notificação não concedida.');
+      toast.error('Este navegador não suporta notificações.');
     }
   };
 
@@ -68,15 +175,52 @@ const HeaderComponent = ({ title, user, onLogout }) => {
       <NotificationListener /> {/* Adicione aqui, antes do conteúdo visual */}
       <h1>{title}</h1>
       <UserInfo>
-        {/* Botão temporário para testar notificação */}
-        <Button
-          variant="outlined"
-          size="small"
-          style={{ marginRight: 12 }}
-          onClick={handleTestNotification}
-        >
-          Testar Notificação
-        </Button>
+        {/* Botões de teste de notificação - responsivos */}
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '2px' : '4px',
+          marginRight: '8px'
+        }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handleTestNotification}
+            style={{ 
+              fontSize: isMobile ? '10px' : '12px',
+              padding: isMobile ? '2px 6px' : '4px 8px',
+              minWidth: 'auto'
+            }}
+          >
+            🔔 {isMobile ? 'Teste' : 'Teste Geral'}
+          </Button>
+          
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handleTestPedidoNotification}
+            style={{ 
+              fontSize: isMobile ? '10px' : '12px',
+              padding: isMobile ? '2px 6px' : '4px 8px',
+              minWidth: 'auto'
+            }}
+          >
+            ✅ {isMobile ? 'Pedido' : 'Teste Pedido'}
+          </Button>
+          
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handleTestRequisicaoNotification}
+            style={{ 
+              fontSize: isMobile ? '10px' : '12px',
+              padding: isMobile ? '2px 6px' : '4px 8px',
+              minWidth: 'auto'
+            }}
+          >
+            📋 {isMobile ? 'Req.' : 'Teste Requisição'}
+          </Button>
+        </div>
         
         {/* Mostrar sininho para todos os usuários logados */}
         {user && (
