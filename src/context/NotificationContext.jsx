@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
+import { useMobileNotifications } from '../hooks/useMobileNotifications';
 
 const NotificationContext = createContext();
 
@@ -15,6 +16,9 @@ export const NotificationProvider = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const lastWindowNotificationRef = useRef(0);
   const notificationHistoryRef = useRef(new Set()); // Para evitar duplicatas
+  
+  // Hook para notificações móveis
+  const mobileNotifications = useMobileNotifications();
 
   // Efeito para detectar quando a página fica visível novamente
   useEffect(() => {
@@ -38,6 +42,20 @@ export const NotificationProvider = ({ children }) => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
+
+  // Efeito para solicitar permissão de notificação automaticamente
+  useEffect(() => {
+    const requestInitialPermission = async () => {
+      if (mobileNotifications.isSupported && mobileNotifications.permission === 'default') {
+        // Aguardar um pouco antes de solicitar para não ser intrusivo
+        setTimeout(() => {
+          mobileNotifications.requestPermission();
+        }, 3000);
+      }
+    };
+
+    requestInitialPermission();
+  }, [mobileNotifications.isSupported, mobileNotifications.permission]);
 
   const addNotification = (notification) => {
     // Criar chave única para evitar duplicatas
@@ -77,14 +95,19 @@ export const NotificationProvider = ({ children }) => {
     setNotifications(prev => [newNotification, ...prev.slice(0, 49)]); // Máximo 50 notificações
     setUnreadCount(prev => prev + 1);
 
-    // Se a página não estiver em foco, enviar notificação do Windows
+    // Se a página não estiver em foco, enviar notificação do Windows/Mobile
     // mas com limite de tempo (não mais que 1 notificação por minuto)
     if (document.hidden) {
       const now = Date.now();
       const timeSinceLastNotification = now - lastWindowNotificationRef.current;
       
       if (timeSinceLastNotification > 60000) { // 1 minuto
-        showWindowsNotification(notification.title, notification.body, notification.action);
+        // Usar notificação móvel se disponível, senão usar padrão
+        if (mobileNotifications.isMobile && mobileNotifications.isAvailable()) {
+          mobileNotifications.sendNotification(notification.title, notification.body, notification.action);
+        } else {
+          showWindowsNotification(notification.title, notification.body, notification.action);
+        }
         lastWindowNotificationRef.current = now;
       }
     }
@@ -116,21 +139,45 @@ export const NotificationProvider = ({ children }) => {
   const showWindowsNotification = (title, body, action) => {
     if ('Notification' in window && Notification.permission === 'granted') {
       try {
-        const notification = new window.Notification(title, { 
+        // Configurações específicas para diferentes dispositivos
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        const notificationOptions = {
           body,
-          icon: '/icon.png', // Usar o ícone da pasta public
-          requireInteraction: true, // Manter visível até interação
-          tag: 'controle-estoque', // Evitar múltiplas notificações
-          data: { action } // Passar dados para o evento
-        });
+          icon: '/icon.png',
+          badge: '/icon.png', // Para Android
+          requireInteraction: !isMobile, // Em mobile, auto-fechar é melhor
+          tag: 'controle-estoque',
+          data: { action },
+          vibrate: isMobile ? [200, 100, 200] : undefined, // Vibração apenas em mobile
+          silent: false,
+          renotify: true
+        };
 
-        // Adicionar listener para clique na notificação
-        notification.onclick = (event) => {
+        // Para mobile, adicionar mais opções
+        if (isMobile) {
+          notificationOptions.actions = [
+            {
+              action: 'open',
+              title: '📱 Abrir',
+              icon: '/icon.png'
+            }
+          ];
+        }
+
+        const notification = new window.Notification(title, notificationOptions);
+
+        // Handler para clique na notificação
+        const handleNotificationClick = (event) => {
+          console.log('Notificação clicada:', { event, action });
+          
           // Focar na janela/aba do navegador
-          window.focus();
+          if (window.focus) {
+            window.focus();
+          }
           
           // Determinar a URL de destino
-          const targetAction = event.target.data?.action || action;
+          const targetAction = event.target?.data?.action || action;
           let targetUrl;
           
           if (targetAction) {
@@ -145,32 +192,69 @@ export const NotificationProvider = ({ children }) => {
             targetUrl = window.location.origin + '/dashboard';
           }
           
-          // Verificar se a página atual é a mesma que queremos abrir
-          if (window.location.href === targetUrl) {
-            // Já estamos na página correta, apenas fechar notificação
-            notification.close();
-            return;
-          }
+          console.log('Redirecionando para:', targetUrl);
           
-          // Se a página está oculta ou minimizada, agendar redirecionamento
-          if (document.hidden) {
-            sessionStorage.setItem('pendingRedirect', targetUrl);
+          // Para mobile, usar diferentes estratégias
+          if (isMobile) {
+            // Tentar abrir na mesma aba se possível
+            if (window.location.href.includes(window.location.origin)) {
+              window.location.href = targetUrl;
+            } else {
+              window.open(targetUrl, '_blank');
+            }
           } else {
-            // Página está visível, redirecionar imediatamente
-            window.location.href = targetUrl;
+            // Desktop - verificar se a página está oculta
+            if (document.hidden) {
+              sessionStorage.setItem('pendingRedirect', targetUrl);
+            } else {
+              window.location.href = targetUrl;
+            }
           }
           
           // Fechar a notificação
           notification.close();
         };
 
-        // Auto-fechar após 15 segundos se não houver interação
+        // Adicionar listeners
+        notification.onclick = handleNotificationClick;
+        
+        // Para mobile, também escutar ações
+        if ('addEventListener' in notification && isMobile) {
+          notification.addEventListener('notificationclick', handleNotificationClick);
+        }
+
+        // Auto-fechar - tempo diferente para mobile vs desktop
+        const autoCloseTime = isMobile ? 8000 : 15000;
         setTimeout(() => {
-          notification.close();
-        }, 15000);
+          if (notification) {
+            notification.close();
+          }
+        }, autoCloseTime);
 
       } catch (err) {
-        console.debug('Erro ao exibir notificação do Windows:', err);
+        console.debug('Erro ao exibir notificação:', err);
+        
+        // Fallback para mobile - tentar service worker notification
+        if ('serviceWorker' in navigator && 'showNotification' in ServiceWorkerRegistration.prototype) {
+          navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification(title, {
+              body,
+              icon: '/icon.png',
+              badge: '/icon.png',
+              tag: 'controle-estoque-fallback',
+              data: { action },
+              vibrate: [200, 100, 200],
+              actions: [
+                {
+                  action: 'open',
+                  title: 'Abrir'
+                }
+              ]
+            });
+          }).catch(swErr => {
+            console.debug('Service Worker notification também falhou:', swErr);
+          });
+        }
       }
     }
   };

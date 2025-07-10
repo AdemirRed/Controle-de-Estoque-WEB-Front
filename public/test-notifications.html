@@ -60,14 +60,36 @@
             margin: 10px 5px;
             transition: background 0.3s ease;
         }
-        .button:hover {
-            background: #1565c0;
+        .mobile-info {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .device-info {
+            background: #f0f0f0;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🔔 Teste de Notificações do Sistema</h1>
+        
+        <div class="device-info" id="deviceInfo">
+            Carregando informações do dispositivo...
+        </div>
+        
+        <div class="mobile-info" id="mobileInfo" style="display: none;">
+            <strong>📱 Dispositivo Móvel Detectado!</strong><br>
+            Notificações otimizadas para mobile estão ativas.<br>
+            Incluem vibração e melhor compatibilidade.
+        </div>
         
         <div class="info">
             <strong>Como testar:</strong><br>
@@ -126,9 +148,52 @@
     </div>
 
     <script>
+        let swRegistration = null;
+        let isMobile = false;
+
+        // Detectar dispositivo móvel
+        function detectMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        // Registrar Service Worker
+        async function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    swRegistration = await navigator.serviceWorker.register('/sw-notifications.js');
+                    console.log('Service Worker registrado:', swRegistration);
+                    return true;
+                } catch (error) {
+                    console.error('Erro ao registrar Service Worker:', error);
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        // Atualizar informações do dispositivo
+        function updateDeviceInfo() {
+            isMobile = detectMobile();
+            const deviceInfo = document.getElementById('deviceInfo');
+            const mobileInfo = document.getElementById('mobileInfo');
+            
+            let info = `Dispositivo: ${isMobile ? 'Mobile' : 'Desktop'}\n`;
+            info += `User Agent: ${navigator.userAgent.substring(0, 60)}...\n`;
+            info += `Notificações: ${('Notification' in window) ? 'Suportadas' : 'Não suportadas'}\n`;
+            info += `Service Worker: ${('serviceWorker' in navigator) ? 'Suportado' : 'Não suportado'}\n`;
+            info += `Permissão: ${Notification.permission}\n`;
+            
+            deviceInfo.textContent = info;
+            
+            if (isMobile) {
+                mobileInfo.style.display = 'block';
+            }
+        }
+
         function requestPermission() {
             if ('Notification' in window && Notification.permission === 'default') {
                 Notification.requestPermission().then(permission => {
+                    updateDeviceInfo();
                     if (permission === 'granted') {
                         alert('✅ Permissão concedida! Agora você pode testar as notificações.');
                     } else {
@@ -142,50 +207,82 @@
             }
         }
 
-        function sendNotification(title, body, action) {
+        async function sendNotification(title, body, action) {
             if ('Notification' in window && Notification.permission === 'granted') {
-                const notification = new Notification(title, {
+                
+                if (isMobile && swRegistration) {
+                    // Usar Service Worker para mobile
+                    try {
+                        await swRegistration.showNotification(title, {
+                            body: body,
+                            icon: '/icon.png',
+                            badge: '/icon.png',
+                            tag: 'controle-estoque-test-mobile',
+                            data: { action },
+                            vibrate: [200, 100, 200],
+                            requireInteraction: false,
+                            actions: [
+                                {
+                                    action: 'open',
+                                    title: '📱 Abrir'
+                                }
+                            ]
+                        });
+                        
+                        alert(`📱 Notificação móvel enviada: "${title}"\nClique nela quando aparecer para testar o redirecionamento!`);
+                        return;
+                    } catch (error) {
+                        console.error('Erro com Service Worker, usando fallback:', error);
+                    }
+                }
+
+                // Fallback para desktop ou se mobile falhar
+                const notificationOptions = {
                     body: body,
                     icon: '/icon.png',
-                    requireInteraction: true,
+                    requireInteraction: !isMobile,
                     tag: 'controle-estoque-test',
                     data: { action }
-                });
+                };
+
+                if (isMobile) {
+                    notificationOptions.vibrate = [200, 100, 200];
+                }
+
+                const notification = new Notification(title, notificationOptions);
 
                 notification.onclick = (event) => {
-                    // Focar na janela/aba do navegador
                     window.focus();
                     
-                    // Determinar a URL de destino
                     const targetAction = event.target.data?.action || action;
                     let targetUrl;
                     
                     if (targetAction) {
-                        // Se é uma rota relativa, construir URL completa
                         if (targetAction.startsWith('/')) {
-                            // Assumindo que o site principal está na raiz
                             targetUrl = window.location.origin + targetAction;
                         } else {
                             targetUrl = targetAction;
                         }
                     } else {
-                        // Se não há ação específica, ir para o dashboard
                         targetUrl = window.location.origin + '/dashboard';
                     }
                     
                     console.log('Redirecionando para:', targetUrl);
                     
-                    // Abrir em nova aba/janela ou redirecionar atual
-                    window.open(targetUrl, '_blank');
+                    if (isMobile) {
+                        window.open(targetUrl, '_blank');
+                    } else {
+                        window.open(targetUrl, '_blank');
+                    }
                     
-                    // Fechar a notificação
                     notification.close();
                 };
 
-                // Auto-fechar após 15 segundos se não houver interação
+                // Auto-fechar
+                const autoCloseTime = isMobile ? 8000 : 15000;
                 setTimeout(() => {
                     notification.close();
-                }, 15000);
+                }, autoCloseTime);
 
                 alert(`📢 Notificação enviada: "${title}"\nClique nela quando aparecer para testar o redirecionamento!`);
             } else {
@@ -193,18 +290,12 @@
             }
         }
 
-        // Verificar permissão ao carregar
-        if ('Notification' in window) {
-            if (Notification.permission === 'granted') {
-                console.log('✅ Notificações já habilitadas');
-            } else if (Notification.permission === 'default') {
-                console.log('⚠️ Permissão de notificação ainda não solicitada');
-            } else {
-                console.log('❌ Notificações bloqueadas');
-            }
-        } else {
-            console.log('❌ Este navegador não suporta notificações');
-        }
+        // Inicializar quando a página carregar
+        window.addEventListener('load', async () => {
+            updateDeviceInfo();
+            await registerServiceWorker();
+            updateDeviceInfo();
+        });
     </script>
 </body>
 </html>

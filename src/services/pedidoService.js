@@ -39,9 +39,35 @@ export const PedidoService = {
     }
   },
   
-  deletarPedido: (id) => api.delete(`/pedidos/${id}`),
+  deletarPedido: async (id) => {
+    try {
+      const response = await api.delete(`/pedidos/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao deletar pedido:', error.response?.data || error.message);
+      throw error;
+    }
+  },
   
-  excluirPedido: (id) => api.delete(`/pedidos/${id}`),
+  excluirPedido: async (id) => {
+    try {
+      const response = await api.delete(`/pedidos/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao excluir pedido:', error.response?.data || error.message);
+      // Tentar diferentes endpoints caso o primeiro falhe
+      if (error.response?.status === 404) {
+        try {
+          const altResponse = await api.delete(`/pedido/${id}`);
+          return altResponse.data;
+        } catch (altError) {
+          console.error('Erro no endpoint alternativo:', altError);
+          throw error; // Lançar o erro original
+        }
+      }
+      throw error;
+    }
+  },
   
   listarItens: () => api.get('/itens'),
 

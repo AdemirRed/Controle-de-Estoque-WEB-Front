@@ -296,14 +296,44 @@ const Pedidos = () => {
 
   const handleDeletePedido = async (id) => {
     if (!window.confirm('Tem certeza que deseja excluir este pedido?')) return;
+    
     try {
-      await PedidoService.excluirPedido(id);
+      setLoading(true);
+      console.log('Tentando excluir pedido ID:', id);
+      
+      const response = await PedidoService.excluirPedido(id);
+      console.log('Resposta da exclusão:', response);
+      
       toast.success('Pedido excluído com sucesso!');
+      
+      // Recarregar a lista de pedidos
       const res = await PedidoService.listarPedidos();
-      setPedidos(res.data);
+      setPedidos(res.data || []);
+      
     } catch (err) {
-      console.error('Erro ao excluir pedido:', err);
-      toast.error('Erro ao excluir pedido. Tente novamente.');
+      console.error('Erro detalhado ao excluir pedido:', {
+        id,
+        error: err,
+        response: err.response?.data,
+        status: err.response?.status,
+        message: err.message
+      });
+      
+      let errorMessage = 'Erro ao excluir pedido. Tente novamente.';
+      
+      if (err.response?.status === 404) {
+        errorMessage = 'Pedido não encontrado. Pode já ter sido excluído.';
+      } else if (err.response?.status === 403) {
+        errorMessage = 'Você não tem permissão para excluir este pedido.';
+      } else if (err.response?.status === 409) {
+        errorMessage = 'Não é possível excluir este pedido. Verifique se não há dependências.';
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
