@@ -98,6 +98,19 @@ const GlobalStyles = createGlobalStyle`
       
       td {
         color: #eaf6fb;
+        
+        &.nome-item {
+          font-weight: 600;
+          font-size: 1.1em;
+          color: #00eaff;
+        }
+        
+        &:last-child {
+          display: flex;
+          gap: 4px;
+          justify-content: flex-start;
+          align-items: center;
+        }
       }
       
       tr:hover {

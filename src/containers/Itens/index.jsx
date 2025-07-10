@@ -616,24 +616,24 @@ const Itens = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <Td colSpan={isAdmin ? "5" : "4"} style={{ textAlign: 'center' }}>
+                    <td colSpan={isAdmin ? "5" : "4"} style={{ textAlign: 'center' }}>
                       Carregando...
-                    </Td>
+                    </td>
                   </tr>
                 ) : itensPaginados.length === 0 ? (
                   <tr>
-                    <Td colSpan={isAdmin ? "5" : "4"} style={{ textAlign: 'center' }}>
+                    <td colSpan={isAdmin ? "5" : "4"} style={{ textAlign: 'center' }}>
                       Nenhum item encontrado
-                    </Td>
+                    </td>
                   </tr>
                 ) : (
                   itensPaginados.map((item) => (
                     <tr key={item.id}>
-                      <Td className="nome-item">{item.nome}</Td>
-                      <Td>{item.quantidade}</Td>
-                      <Td>{item.quantidade_minima}</Td>
-                      {isAdmin && <Td>{formatarMoeda(item.preco)}</Td>} {/* Mostrar preço apenas para administradores */}
-                      <Td>
+                      <td className="nome-item">{item.nome}</td>
+                      <td>{item.quantidade}</td>
+                      <td>{item.quantidade_minima}</td>
+                      {isAdmin && <td>{formatarMoeda(item.preco)}</td>} {/* Mostrar preço apenas para administradores */}
+                      <td>
                         <ActionButtonGroup>
                           <ActionButton
                             className="view-button"
@@ -661,7 +661,7 @@ const Itens = () => {
                             </>
                           )}
                         </ActionButtonGroup>
-                      </Td>
+                      </td>
                     </tr>
                   ))
                 )}
