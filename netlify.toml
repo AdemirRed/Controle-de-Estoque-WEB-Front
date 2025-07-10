@@ -13,28 +13,4 @@
     X-Content-Type-Options = "nosniff"
     X-Frame-Options = "DENY"
     X-XSS-Protection = "1; mode=block"
-  to = "https://controle-de-estoque-web-api.onrender.com/item-requests/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/fornecedores/*"
-  to = "https://controle-de-estoque-web-api.onrender.com/fornecedores/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/movimentacoes/*"
-  to = "https://controle-de-estoque-web-api.onrender.com/movimentacoes/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/pedidos/*"
-  to = "https://controle-de-estoque-web-api.onrender.com/pedidos/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/relatorios/*"
 
