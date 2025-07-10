@@ -117,6 +117,8 @@ export const DashboardGrid = styled.div`
   gap: 24px;
   margin-top: 20px;
   max-width: 100%;
+  width: 100%;
+  overflow-x: hidden;
 
   @media (max-width: 900px) {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -126,6 +128,12 @@ export const DashboardGrid = styled.div`
   @media (max-width: 600px) {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+  
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 15px;
   }
 `;
 

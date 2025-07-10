@@ -430,13 +430,13 @@ const Dashboard = () => {
 
           <ChartSection>
             <h2 style={{ color: '#FFFFFF', marginBottom: '15px' }}>Histórico de Movimentações</h2>
-            <div className="chart-container">
+            <div className="chart-container chart-responsive">
               {chartData ? (
                 <Line
                   data={chartData}
                   options={{
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
                     interaction: {
                       intersect: false,
                       mode: 'index'
