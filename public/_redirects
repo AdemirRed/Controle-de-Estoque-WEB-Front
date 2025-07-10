@@ -1,5 +1,24 @@
-# API Routes - Apenas requisições que começam com /api/ vão para o backend
-/api/*                    https://controle-de-estoque-web-api.onrender.com/:splat  200!
+# SPA Routes - Rotas específicas do frontend (servem index.html)
+/login                    /index.html   200
+/register                 /index.html   200
+/dashboard               /index.html   200
+/itens                   /index.html   200
+/fornecedores            /index.html   200
+/usuarios                /index.html   200
+/movimentacoes-estoque   /index.html   200
+/pedidos                 /index.html   200
+/item-requests           /index.html   200
+/unidades-medida         /index.html   200
 
-# SPA Fallback - TODAS as outras rotas servem o index.html
-/*                        /index.html   200
+# API Routes - Requisições da API vão para o backend
+/auth/*                  https://controle-de-estoque-web-api.onrender.com/auth/:splat  200
+/itens/*                 https://controle-de-estoque-web-api.onrender.com/itens/:splat  200
+/fornecedores/*          https://controle-de-estoque-web-api.onrender.com/fornecedores/:splat  200
+/usuarios/*              https://controle-de-estoque-web-api.onrender.com/usuarios/:splat  200
+/movimentacoes-estoque/* https://controle-de-estoque-web-api.onrender.com/movimentacoes-estoque/:splat  200
+/pedidos/*               https://controle-de-estoque-web-api.onrender.com/pedidos/:splat  200
+/item-requests/*         https://controle-de-estoque-web-api.onrender.com/item-requests/:splat  200
+/unidades-medida/*       https://controle-de-estoque-web-api.onrender.com/unidades-medida/:splat  200
+
+# SPA Fallback - Qualquer outra rota serve o index.html
+/*                       /index.html   200
