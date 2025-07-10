@@ -256,7 +256,7 @@ const NotificationListener = () => {
     checkForUpdates();
 
     // Configurar polling baseado no tipo de usuário
-    const pollingInterval = user.papel === 'admin' ? 10000 : 120000; // Admin: 10s, User: 2min
+    const pollingInterval = user.papel === 'admin' ? 5000 : 15000; // Admin: 5s, User: 15s
     intervalRef.current = setInterval(checkForUpdates, pollingInterval);
 
     // Cleanup

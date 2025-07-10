@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import React, { useEffect, useState, useRef } from 'react';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
@@ -8,6 +7,7 @@ import MenuSidebar from '../../components/MenuSidebar';
 import Paginacao from '../../components/Paginacao';
 import FiltrosPadrao from '../../components/FiltrosPadrao';
 import { useAuth } from '../../context/AuthContext';
+import { useNotifications } from '../../context/NotificationContext';
 import { PedidoService } from '../../services/pedidoService';
 import api from '../../services/api';
 import {
@@ -56,6 +56,7 @@ const statusColors = {
 
 const Pedidos = () => {
   const { user, signOut } = useAuth();
+  const { addNotification } = useNotifications();
   const location = useLocation();
   const highlightRef = useRef(null);
   const [pedidos, setPedidos] = useState([]);
@@ -305,6 +306,23 @@ const Pedidos = () => {
       }
 
       await PedidoService.criarPedido(body);
+      
+      // Notificação automática para o usuário que criou o pedido
+      const itemNomeParaNotificacao = novoPedido.itemId 
+        ? itens.find(i => i.id === novoPedido.itemId)?.nome 
+        : novoPedido.itemNome;
+        
+      addNotification({
+        title: '✅ Pedido Criado com Sucesso',
+        body: `Seu pedido de ${itemNomeParaNotificacao || 'item'} (Qtd: ${novoPedido.quantidade}) foi enviado e está aguardando aprovação.`,
+        message: `Seu pedido de ${itemNomeParaNotificacao || 'item'} (Qtd: ${novoPedido.quantidade}) foi enviado e está aguardando aprovação.`,
+        type: 'pedido_criado',
+        action: '/pedidos'
+      });
+      
+      // Toast de sucesso
+      toast.success('Pedido criado com sucesso!');
+      
       setNovoPedido({ itemId: '', itemNome: '', quantidade: '', unidadeMedidaId: '', observacoes: '', fornecedorId: '' });
       const res = await PedidoService.listarPedidos();
       setPedidos(res.data);
@@ -318,8 +336,9 @@ const Pedidos = () => {
 
   const handleStatusChange = async (id, status, fornecedorId = null) => {
     try {
+      const pedido = pedidos.find(p => p.id === id);
+      
       if (status === 'aprovado') {
-        let pedido = pedidos.find(p => p.id === id);
         let fornecedorSelecionado = fornecedorId || pedido?.fornecedor_id;
         if (!fornecedorSelecionado) {
           // Abre modal para selecionar fornecedor
@@ -330,12 +349,36 @@ const Pedidos = () => {
       } else {
         await PedidoService.atualizarPedido(id, { status });
       }
+      
+      // Notificação automática para mudança de status
+      if (pedido) {
+        const itemNome = itens.find(i => i.id === pedido.item_id)?.nome || pedido.item_nome || 'item';
+        const statusLabels = {
+          pendente: 'Pendente',
+          aprovado: 'Aprovado ✅',
+          rejeitado: 'Rejeitado ❌',
+          entregue: 'Entregue 📦'
+        };
+        
+        addNotification({
+          title: `Pedido ${statusLabels[status] || status}`,
+          body: `O pedido de ${itemNome} (ID: #${id.toString().slice(-6).toUpperCase()}) foi ${statusLabels[status]?.toLowerCase() || status}.`,
+          message: `O pedido de ${itemNome} foi ${statusLabels[status]?.toLowerCase() || status}.`,
+          type: 'pedido_status_change',
+          action: `/pedidos?highlight=${id}`
+        });
+        
+        // Toast de feedback
+        toast.success(`Pedido ${statusLabels[status]?.toLowerCase() || status} com sucesso!`);
+      }
+      
       const res = await PedidoService.listarPedidos();
       setPedidos(res.data);
       setError(null);
     } catch (err) {
       setError(err?.response?.data?.message || 'Erro ao atualizar status');
       console.error('Erro ao atualizar status');
+      toast.error('Erro ao atualizar status do pedido');
     }
   };
 
@@ -349,20 +392,39 @@ const Pedidos = () => {
 
   const handleRejectConfirm = async () => {
     if (!modalRejeicao.motivo.trim()) {
-      console.error('Por favor, informe o motivo da rejeição');
+      toast.error('Por favor, informe o motivo da rejeição');
       return;
     }
 
     try {
+      const pedido = pedidos.find(p => p.id === modalRejeicao.pedidoId);
+      
       await PedidoService.atualizarPedido(modalRejeicao.pedidoId, { 
         status: 'rejeitado',
         motivo_rejeicao: modalRejeicao.motivo.trim()
       });
+      
+      // Notificação automática para rejeição
+      if (pedido) {
+        const itemNome = itens.find(i => i.id === pedido.item_id)?.nome || pedido.item_nome || 'item';
+        
+        addNotification({
+          title: '❌ Pedido Rejeitado',
+          body: `O pedido de ${itemNome} foi rejeitado. Motivo: ${modalRejeicao.motivo.trim()}`,
+          message: `O pedido de ${itemNome} foi rejeitado. Motivo: ${modalRejeicao.motivo.trim()}`,
+          type: 'pedido_rejeitado',
+          action: `/pedidos?highlight=${modalRejeicao.pedidoId}`
+        });
+        
+        toast.info('Pedido rejeitado e usuário notificado');
+      }
+      
       const res = await PedidoService.listarPedidos();
       setPedidos(res.data);
       setModalRejeicao({ open: false, pedidoId: null, motivo: '' });
     } catch (err) {
       console.error('Erro ao rejeitar pedido');
+      toast.error('Erro ao rejeitar pedido');
     }
   };
 

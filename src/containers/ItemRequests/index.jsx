@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import React, { useEffect, useState, useRef } from 'react';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
@@ -8,6 +7,7 @@ import MenuSidebar from '../../components/MenuSidebar';
 import Paginacao from '../../components/Paginacao';
 import FiltrosPadrao from '../../components/FiltrosPadrao'; // Importação do componente FiltrosPadrao
 import { useAuth } from '../../context/AuthContext';
+import { useNotifications } from '../../context/NotificationContext';
 import api from '../../services/api';
 import {
   Button,
@@ -46,6 +46,7 @@ const statusColors = {
 
 const ItemRequests = () => {
   const { user, signOut } = useAuth();
+  const { addNotification } = useNotifications();
   const location = useLocation();
   const highlightRef = useRef(null);
   const [requests, setRequests] = useState([]);
@@ -197,9 +198,21 @@ const ItemRequests = () => {
         body.usuario_id = user.id;
         body.requisitante_id = user.id;
       }
-      // Debug: veja o que está sendo enviado
       console.log('Enviando requisição:', body);
       await api.post('/item-requests', body);
+      
+      // Notificação automática para requisição criada
+      const itemSelecionado = itens.find(i => i.id === novoItem.itemId);
+      const nomeItem = itemSelecionado?.nome || 'item';
+      
+      addNotification({
+        title: '📋 Requisição Criada com Sucesso',
+        body: `Sua requisição de ${nomeItem} (Qtd: ${novoItem.quantidade}) foi enviada e está aguardando aprovação.`,
+        message: `Sua requisição de ${nomeItem} (Qtd: ${novoItem.quantidade}) foi enviada e está aguardando aprovação.`,
+        type: 'requisicao_criada',
+        action: '/item-requests'
+      });
+      
       toast.success('Requisição enviada!');
       setNovoItem({ itemId: '', quantidade: '', observacao: '', usuarioId: '' });
       const res = await api.get(user?.papel === 'admin' ? '/item-requests' : '/item-requests/minhas');
@@ -224,9 +237,10 @@ const ItemRequests = () => {
 
   const handleStatusChange = async (id, status) => {
     try {
+      const req = requests.find(r => r.id === id);
+      
       // Se for aprovar, primeiro tenta registrar a movimentação
       if (status === 'aprovado') {
-        const req = requests.find(r => r.id === id);
         if (req) {
           // Buscar nome do solicitante igual ao que aparece na tabela
           let solicitanteNome = '';
@@ -259,8 +273,30 @@ const ItemRequests = () => {
           }
         }
       }
+      
       // Só altera o status se não for aprovado ou se movimentação foi registrada com sucesso
       await api.put(`/item-requests/${id}`, { status });
+      
+      // Notificação automática para mudança de status de requisição
+      if (req) {
+        const itemSelecionado = itens.find(i => i.id === req.item_id);
+        const nomeItem = itemSelecionado?.nome || req.item_nome || 'item';
+        const statusLabels = {
+          pendente: 'Pendente',
+          aprovado: 'Aprovada ✅',
+          rejeitado: 'Rejeitada ❌',
+          cancelado: 'Cancelada 🚫'
+        };
+        
+        addNotification({
+          title: `Requisição ${statusLabels[status] || status}`,
+          body: `Sua requisição de ${nomeItem} (Qtd: ${req.quantidade}) foi ${statusLabels[status]?.toLowerCase() || status}.`,
+          message: `Sua requisição de ${nomeItem} foi ${statusLabels[status]?.toLowerCase() || status}.`,
+          type: 'requisicao_status_change',
+          action: `/item-requests?highlight=${id}`
+        });
+      }
+      
       toast.success('Status atualizado!');
       // Atualiza lista
       const res = await api.get('/item-requests');
@@ -350,10 +386,27 @@ const ItemRequests = () => {
     }
 
     try {
+      const req = requests.find(r => r.id === modalRejeicao.requisicaoId);
+      
       await api.put(`/item-requests/${modalRejeicao.requisicaoId}`, { 
         status: 'rejeitado',
         motivo_rejeicao: modalRejeicao.motivo.trim()
       });
+      
+      // Notificação automática para rejeição de requisição
+      if (req) {
+        const itemSelecionado = itens.find(i => i.id === req.item_id);
+        const nomeItem = itemSelecionado?.nome || req.item_nome || 'item';
+        
+        addNotification({
+          title: '❌ Requisição Rejeitada',
+          body: `Sua requisição de ${nomeItem} foi rejeitada. Motivo: ${modalRejeicao.motivo.trim()}`,
+          message: `Sua requisição de ${nomeItem} foi rejeitada. Motivo: ${modalRejeicao.motivo.trim()}`,
+          type: 'requisicao_rejeitada',
+          action: `/item-requests?highlight=${modalRejeicao.requisicaoId}`
+        });
+      }
+      
       toast.success('Requisição rejeitada!');
       const url = user?.papel === 'admin' ? '/item-requests' : '/item-requests/minhas';
       const res = await api.get(url);
