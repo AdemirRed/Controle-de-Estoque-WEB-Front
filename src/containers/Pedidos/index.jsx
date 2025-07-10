@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from 'react';
 import { FaBars, FaTimes } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import HeaderComponent from '../../components/Header';
 import MenuSidebar from '../../components/MenuSidebar';
 import Paginacao from '../../components/Paginacao';
@@ -260,10 +261,12 @@ const Pedidos = () => {
     if (!window.confirm('Tem certeza que deseja excluir este pedido?')) return;
     try {
       await PedidoService.excluirPedido(id);
+      toast.success('Pedido excluído com sucesso!');
       const res = await PedidoService.listarPedidos();
       setPedidos(res.data);
     } catch (err) {
-      console.error('Erro ao excluir pedido');
+      console.error('Erro ao excluir pedido:', err);
+      toast.error('Erro ao excluir pedido. Tente novamente.');
     }
   };
 

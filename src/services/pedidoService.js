@@ -41,6 +41,8 @@ export const PedidoService = {
   
   deletarPedido: (id) => api.delete(`/pedidos/${id}`),
   
+  excluirPedido: (id) => api.delete(`/pedidos/${id}`),
+  
   listarItens: () => api.get('/itens'),
 
   listarUnidadesMedida: () => api.get('/unidades-medida'),
