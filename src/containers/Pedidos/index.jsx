@@ -9,6 +9,7 @@ import Paginacao from '../../components/Paginacao';
 import FiltrosPadrao from '../../components/FiltrosPadrao';
 import { useAuth } from '../../context/AuthContext';
 import { PedidoService } from '../../services/pedidoService';
+import api from '../../services/api';
 import {
   Button,
   Input,
@@ -72,6 +73,7 @@ const Pedidos = () => {
   const [itens, setItens] = useState([]);
   const [fornecedores, setFornecedores] = useState([]);
   const [unidadesMedida, setUnidadesMedida] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
   const [error, setError] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
 
@@ -95,6 +97,29 @@ const Pedidos = () => {
 
   const [busca, setBusca] = useState('');
   const [buscaPeriodo, setBuscaPeriodo] = useState([null, null]);
+
+  // Função para resolver nome do usuário
+  const resolverNomeUsuario = (pedido) => {
+    // Se já tem o nome direto
+    if (pedido.criado_por && typeof pedido.criado_por === 'string' && !pedido.criado_por.includes('@')) {
+      return pedido.criado_por;
+    }
+    
+    // Se tem usuario_id, buscar na lista de usuários
+    if (pedido.usuario_id && usuarios.length > 0) {
+      const usuario = usuarios.find(u => u.id === pedido.usuario_id);
+      if (usuario) return usuario.nome;
+    }
+    
+    // Se tem criado_por como ID, buscar na lista
+    if (pedido.criado_por && usuarios.length > 0) {
+      const usuario = usuarios.find(u => u.id === parseInt(pedido.criado_por) || u.email === pedido.criado_por);
+      if (usuario) return usuario.nome;
+    }
+    
+    // Fallback
+    return pedido.criado_por || 'Usuário não identificado';
+  };
 
   // Processar parâmetros da URL para highlight
   useEffect(() => {
@@ -169,6 +194,18 @@ const Pedidos = () => {
       }
     };
     fetchUnidadesMedida();
+  }, []);
+
+  useEffect(() => {
+    const fetchUsuarios = async () => {
+      try {
+        const response = await api.get('/usuarios');
+        setUsuarios(response.data);
+      } catch (err) {
+        console.error('Erro ao carregar usuários:', err);
+      }
+    };
+    fetchUsuarios();
   }, []);
 
   useEffect(() => {
@@ -295,11 +332,23 @@ const Pedidos = () => {
   };
 
   const handleDeletePedido = async (id) => {
-    if (!window.confirm('Tem certeza que deseja excluir este pedido?')) return;
+    // Verificar se o pedido ainda está pendente
+    const pedido = pedidos.find(p => p.id === id);
+    if (!pedido) {
+      toast.error('Pedido não encontrado!');
+      return;
+    }
+    
+    if (pedido.status !== 'pendente') {
+      toast.error('Apenas pedidos pendentes podem ser excluídos!');
+      return;
+    }
+    
+    if (!window.confirm(`Tem certeza que deseja excluir o pedido #${id}?\n\nEsta ação não pode ser desfeita.`)) return;
     
     try {
       setLoading(true);
-      console.log('Tentando excluir pedido ID:', id);
+      console.log('Tentando excluir pedido ID:', id, 'Status:', pedido.status);
       
       const response = await PedidoService.excluirPedido(id);
       console.log('Resposta da exclusão:', response);
@@ -313,6 +362,7 @@ const Pedidos = () => {
     } catch (err) {
       console.error('Erro detalhado ao excluir pedido:', {
         id,
+        pedidoStatus: pedido.status,
         error: err,
         response: err.response?.data,
         status: err.response?.status,
@@ -327,6 +377,8 @@ const Pedidos = () => {
         errorMessage = 'Você não tem permissão para excluir este pedido.';
       } else if (err.response?.status === 409) {
         errorMessage = 'Não é possível excluir este pedido. Verifique se não há dependências.';
+      } else if (err.response?.status === 400) {
+        errorMessage = 'Apenas pedidos pendentes podem ser excluídos.';
       } else if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
       }
@@ -608,7 +660,7 @@ const Pedidos = () => {
                       </div>
                       {/* Novo: Exibir criado por */}
                       <div style={{ marginBottom: 2, fontSize: 14, color: '#b2bac2' }}>
-                        <strong>Criado por:</strong> {pedido.criado_por || '-'}
+                        <strong>Criado por:</strong> {resolverNomeUsuario(pedido)}
                       </div>
                       {pedido.motivo_rejeicao && (
                         <div style={{ marginBottom: 2, fontSize: 14, color: '#ff6b6b' }}>
@@ -622,9 +674,12 @@ const Pedidos = () => {
                       )}
                     </div>
                     <RequestItemActions>
-                      <ActionButton bgColor="#c91407" onClick={() => handleDeletePedido(pedido.id)} title="Excluir pedido">
-                        Excluir
-                      </ActionButton>
+                      {/* Só mostrar botão de excluir para pedidos pendentes */}
+                      {pedido.status === 'pendente' && (
+                        <ActionButton bgColor="#c91407" onClick={() => handleDeletePedido(pedido.id)} title="Excluir pedido">
+                          Excluir
+                        </ActionButton>
+                      )}
                     </RequestItemActions>
                   </RequestItem>
                 );
