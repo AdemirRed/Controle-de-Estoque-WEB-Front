@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useRef } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
 
 const NotificationContext = createContext();
 
@@ -15,6 +15,29 @@ export const NotificationProvider = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const lastWindowNotificationRef = useRef(0);
   const notificationHistoryRef = useRef(new Set()); // Para evitar duplicatas
+
+  // Efeito para detectar quando a página fica visível novamente
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Página ficou visível - verificar se há redirecionamento pendente
+        const pendingRedirect = sessionStorage.getItem('pendingRedirect');
+        if (pendingRedirect) {
+          sessionStorage.removeItem('pendingRedirect');
+          // Usar timeout para garantir que a página esteja totalmente carregada
+          setTimeout(() => {
+            window.location.href = pendingRedirect;
+          }, 100);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   const addNotification = (notification) => {
     // Criar chave única para evitar duplicatas
@@ -61,7 +84,7 @@ export const NotificationProvider = ({ children }) => {
       const timeSinceLastNotification = now - lastWindowNotificationRef.current;
       
       if (timeSinceLastNotification > 60000) { // 1 minuto
-        showWindowsNotification(notification.title, notification.body);
+        showWindowsNotification(notification.title, notification.body, notification.action);
         lastWindowNotificationRef.current = now;
       }
     }
@@ -90,10 +113,62 @@ export const NotificationProvider = ({ children }) => {
     notificationHistoryRef.current.clear();
   };
 
-  const showWindowsNotification = (title, body) => {
+  const showWindowsNotification = (title, body, action) => {
     if ('Notification' in window && Notification.permission === 'granted') {
       try {
-        new window.Notification(title, { body });
+        const notification = new window.Notification(title, { 
+          body,
+          icon: '/icon.png', // Usar o ícone da pasta public
+          requireInteraction: true, // Manter visível até interação
+          tag: 'controle-estoque', // Evitar múltiplas notificações
+          data: { action } // Passar dados para o evento
+        });
+
+        // Adicionar listener para clique na notificação
+        notification.onclick = (event) => {
+          // Focar na janela/aba do navegador
+          window.focus();
+          
+          // Determinar a URL de destino
+          const targetAction = event.target.data?.action || action;
+          let targetUrl;
+          
+          if (targetAction) {
+            // Se é uma rota relativa, construir URL completa
+            if (targetAction.startsWith('/')) {
+              targetUrl = window.location.origin + targetAction;
+            } else {
+              targetUrl = targetAction;
+            }
+          } else {
+            // Se não há ação específica, ir para o dashboard
+            targetUrl = window.location.origin + '/dashboard';
+          }
+          
+          // Verificar se a página atual é a mesma que queremos abrir
+          if (window.location.href === targetUrl) {
+            // Já estamos na página correta, apenas fechar notificação
+            notification.close();
+            return;
+          }
+          
+          // Se a página está oculta ou minimizada, agendar redirecionamento
+          if (document.hidden) {
+            sessionStorage.setItem('pendingRedirect', targetUrl);
+          } else {
+            // Página está visível, redirecionar imediatamente
+            window.location.href = targetUrl;
+          }
+          
+          // Fechar a notificação
+          notification.close();
+        };
+
+        // Auto-fechar após 15 segundos se não houver interação
+        setTimeout(() => {
+          notification.close();
+        }, 15000);
+
       } catch (err) {
         console.debug('Erro ao exibir notificação do Windows:', err);
       }

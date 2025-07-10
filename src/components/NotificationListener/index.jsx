@@ -187,7 +187,7 @@ const NotificationListener = () => {
                 title: `Pedido ${statusLabels[pedido.status] || pedido.status}`,
                 body: bodyMsg,
                 type: 'pedido_status',
-                action: '/pedidos'
+                action: `/pedidos?highlight=${pedido.id}` // Adicionar parâmetro para destacar o pedido específico
               });
               setViewedNotification(notifKey);
             }
@@ -234,7 +234,7 @@ const NotificationListener = () => {
                   title: `Requisição ${statusLabels[req.status] || req.status}`,
                   body: bodyMsg,
                   type: 'requisicao_status',
-                  action: '/item-requests'
+                  action: `/item-requests?highlight=${req.id}` // Adicionar parâmetro para destacar a requisição específica
                 });
                 setViewedNotification(notifKey);
               }

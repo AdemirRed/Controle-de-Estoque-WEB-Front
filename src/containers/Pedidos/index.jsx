@@ -1,7 +1,8 @@
 /* eslint-disable no-unused-vars */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import { useLocation } from 'react-router-dom';
 import HeaderComponent from '../../components/Header';
 import MenuSidebar from '../../components/MenuSidebar';
 import Paginacao from '../../components/Paginacao';
@@ -54,8 +55,11 @@ const statusColors = {
 
 const Pedidos = () => {
   const { user, signOut } = useAuth();
+  const location = useLocation();
+  const highlightRef = useRef(null);
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [highlightedId, setHighlightedId] = useState(null);
   const [novoPedido, setNovoPedido] = useState({
     itemId: '',
     itemNome: '',
@@ -91,6 +95,39 @@ const Pedidos = () => {
 
   const [busca, setBusca] = useState('');
   const [buscaPeriodo, setBuscaPeriodo] = useState([null, null]);
+
+  // Processar parâmetros da URL para highlight
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const highlightParam = searchParams.get('highlight');
+    if (highlightParam) {
+      setHighlightedId(parseInt(highlightParam));
+    }
+  }, [location.search]);
+
+  // Scroll para o item destacado após carregamento dos dados
+  useEffect(() => {
+    if (highlightedId && pedidos.length > 0 && !loading) {
+      const timer = setTimeout(() => {
+        if (highlightRef.current) {
+          highlightRef.current.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+        }
+      }, 500);
+      
+      // Limpar highlight após 10 segundos
+      const clearTimer = setTimeout(() => {
+        setHighlightedId(null);
+      }, 10000);
+      
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(clearTimer);
+      };
+    }
+  }, [highlightedId, pedidos.length, loading]);
 
   useEffect(() => {
     const handleResize = () => setSidebarOpen(window.innerWidth > 900);
@@ -470,7 +507,15 @@ const Pedidos = () => {
                   ? Number(pedido.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
                   : '-';
                 return (
-                  <RequestItem key={pedido.id}>
+                  <RequestItem 
+                    key={pedido.id}
+                    ref={highlightedId === pedido.id ? highlightRef : null}
+                    style={{
+                      backgroundColor: highlightedId === pedido.id ? '#fff3cd' : undefined,
+                      border: highlightedId === pedido.id ? '2px solid #ffc107' : undefined,
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
                     <div style={{ flex: 1, width: '100%' }}>
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
                         {user?.papel === 'admin' ? (

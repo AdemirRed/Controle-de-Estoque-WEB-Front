@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Notificações - Controle de Estoque</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .notification-test {
+            background: #e3f2fd;
+            border: 1px solid #1976d2;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .notification-test:hover {
+            background: #bbdefb;
+            transform: translateY(-2px);
+        }
+        .notification-title {
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 5px;
+        }
+        .notification-body {
+            color: #424242;
+        }
+        .info {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: background 0.3s ease;
+        }
+        .button:hover {
+            background: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 Teste de Notificações do Sistema</h1>
+        
+        <div class="info">
+            <strong>Como testar:</strong><br>
+            1. Primeiro, clique em "Solicitar Permissão" abaixo<br>
+            2. Permita as notificações quando solicitado pelo navegador<br>
+            3. Clique em qualquer notificação de teste para ver o redirecionamento<br>
+            4. O site abrirá na página correspondente à notificação
+        </div>
+
+        <button class="button" onclick="requestPermission()">
+            🔔 Solicitar Permissão para Notificações
+        </button>
+
+        <h2>Notificações de Teste:</h2>
+
+        <div class="notification-test" onclick="sendNotification('Pedido Aprovado', 'Seu pedido de Mouse Óptico foi aprovado.', '/pedidos?highlight=123')">
+            <div class="notification-title">Pedido Aprovado</div>
+            <div class="notification-body">Seu pedido de Mouse Óptico foi aprovado.</div>
+            <small>Clique para testar → Redireciona para /pedidos?highlight=123</small>
+        </div>
+
+        <div class="notification-test" onclick="sendNotification('Pedido Rejeitado', 'Seu pedido de Teclado foi rejeitado. Motivo: Fora do orçamento.', '/pedidos?highlight=456')">
+            <div class="notification-title">Pedido Rejeitado</div>
+            <div class="notification-body">Seu pedido de Teclado foi rejeitado. Motivo: Fora do orçamento.</div>
+            <small>Clique para testar → Redireciona para /pedidos?highlight=456</small>
+        </div>
+
+        <div class="notification-test" onclick="sendNotification('Requisição Aprovada', 'Sua requisição de item foi aprovada.', '/item-requests?highlight=789')">
+            <div class="notification-title">Requisição Aprovada</div>
+            <div class="notification-body">Sua requisição de item foi aprovada.</div>
+            <small>Clique para testar → Redireciona para /item-requests?highlight=789</small>
+        </div>
+
+        <div class="notification-test" onclick="sendNotification('Pedidos Pendentes!', 'Você tem 3 pedido(s) pendente(s) para aprovar.', '/pedidos')">
+            <div class="notification-title">Pedidos Pendentes!</div>
+            <div class="notification-body">Você tem 3 pedido(s) pendente(s) para aprovar.</div>
+            <small>Clique para testar → Redireciona para /pedidos</small>
+        </div>
+
+        <div class="notification-test" onclick="sendNotification('Requisições Pendentes!', 'Você tem 2 requisição(ões) de item pendente(s) para aprovar.', '/item-requests')">
+            <div class="notification-title">Requisições Pendentes!</div>
+            <div class="notification-body">Você tem 2 requisição(ões) de item pendente(s) para aprovar.</div>
+            <small>Clique para testar → Redireciona para /item-requests</small>
+        </div>
+
+        <div class="notification-test" onclick="sendNotification('Dashboard Atualizado', 'Novos dados disponíveis no dashboard.', '/dashboard')">
+            <div class="notification-title">Dashboard Atualizado</div>
+            <div class="notification-body">Novos dados disponíveis no dashboard.</div>
+            <small>Clique para testar → Redireciona para /dashboard</small>
+        </div>
+
+        <div class="info">
+            <strong>Nota:</strong> As notificações só aparecerão se esta página estiver em segundo plano (minimizada ou em outra aba).
+            Para testar completamente, minimize esta janela após clicar em uma notificação.
+        </div>
+    </div>
+
+    <script>
+        function requestPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        alert('✅ Permissão concedida! Agora você pode testar as notificações.');
+                    } else {
+                        alert('❌ Permissão negada. As notificações não funcionarão.');
+                    }
+                });
+            } else if (Notification.permission === 'granted') {
+                alert('✅ Permissão já concedida!');
+            } else if (Notification.permission === 'denied') {
+                alert('❌ Permissão negada. Você precisa habilitar nas configurações do navegador.');
+            }
+        }
+
+        function sendNotification(title, body, action) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                const notification = new Notification(title, {
+                    body: body,
+                    icon: '/icon.png',
+                    requireInteraction: true,
+                    tag: 'controle-estoque-test',
+                    data: { action }
+                });
+
+                notification.onclick = (event) => {
+                    // Focar na janela/aba do navegador
+                    window.focus();
+                    
+                    // Determinar a URL de destino
+                    const targetAction = event.target.data?.action || action;
+                    let targetUrl;
+                    
+                    if (targetAction) {
+                        // Se é uma rota relativa, construir URL completa
+                        if (targetAction.startsWith('/')) {
+                            // Assumindo que o site principal está na raiz
+                            targetUrl = window.location.origin + targetAction;
+                        } else {
+                            targetUrl = targetAction;
+                        }
+                    } else {
+                        // Se não há ação específica, ir para o dashboard
+                        targetUrl = window.location.origin + '/dashboard';
+                    }
+                    
+                    console.log('Redirecionando para:', targetUrl);
+                    
+                    // Abrir em nova aba/janela ou redirecionar atual
+                    window.open(targetUrl, '_blank');
+                    
+                    // Fechar a notificação
+                    notification.close();
+                };
+
+                // Auto-fechar após 15 segundos se não houver interação
+                setTimeout(() => {
+                    notification.close();
+                }, 15000);
+
+                alert(`📢 Notificação enviada: "${title}"\nClique nela quando aparecer para testar o redirecionamento!`);
+            } else {
+                alert('❌ Notificações não estão habilitadas. Clique em "Solicitar Permissão" primeiro.');
+            }
+        }
+
+        // Verificar permissão ao carregar
+        if ('Notification' in window) {
+            if (Notification.permission === 'granted') {
+                console.log('✅ Notificações já habilitadas');
+            } else if (Notification.permission === 'default') {
+                console.log('⚠️ Permissão de notificação ainda não solicitada');
+            } else {
+                console.log('❌ Notificações bloqueadas');
+            }
+        } else {
+            console.log('❌ Este navegador não suporta notificações');
+        }
+    </script>
+</body>
+</html>

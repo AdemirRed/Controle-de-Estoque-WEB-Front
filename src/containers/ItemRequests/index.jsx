@@ -1,7 +1,8 @@
 /* eslint-disable no-unused-vars */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import { useLocation } from 'react-router-dom';
 import HeaderComponent from '../../components/Header';
 import MenuSidebar from '../../components/MenuSidebar';
 import Paginacao from '../../components/Paginacao';
@@ -45,8 +46,11 @@ const statusColors = {
 
 const ItemRequests = () => {
   const { user, signOut } = useAuth();
+  const location = useLocation();
+  const highlightRef = useRef(null);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [highlightedId, setHighlightedId] = useState(null);
   const [novoItem, setNovoItem] = useState({
     itemId: '',
     quantidade: '',
@@ -75,6 +79,39 @@ const ItemRequests = () => {
 
   const [busca, setBusca] = useState(''); // Estado para busca
   const [buscaPeriodo, setBuscaPeriodo] = useState([null, null]); // Estado para período de busca
+
+  // Processar parâmetros da URL para highlight
+  React.useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const highlightParam = searchParams.get('highlight');
+    if (highlightParam) {
+      setHighlightedId(parseInt(highlightParam));
+    }
+  }, [location.search]);
+
+  // Scroll para o item destacado após carregamento dos dados
+  React.useEffect(() => {
+    if (highlightedId && requests.length > 0 && !loading) {
+      const timer = setTimeout(() => {
+        if (highlightRef.current) {
+          highlightRef.current.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+        }
+      }, 500);
+      
+      // Limpar highlight após 10 segundos
+      const clearTimer = setTimeout(() => {
+        setHighlightedId(null);
+      }, 10000);
+      
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(clearTimer);
+      };
+    }
+  }, [highlightedId, requests.length, loading]);
 
   React.useEffect(() => {
     const handleResize = () => setSidebarOpen(window.innerWidth > 900);
@@ -556,7 +593,15 @@ const ItemRequests = () => {
                 const podeExcluir = (user?.id === req.requisitante_id || !req.requisitante_id) && req.status !== 'aprovado';
                 const adminPodeExcluir = user?.papel === 'admin' && req.status !== 'aprovado';
                 return (
-                  <RequestItem key={req.id}>
+                  <RequestItem 
+                    key={req.id}
+                    ref={highlightedId === req.id ? highlightRef : null}
+                    style={{
+                      backgroundColor: highlightedId === req.id ? '#fff3cd' : undefined,
+                      border: highlightedId === req.id ? '2px solid #ffc107' : undefined,
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
                     <div style={{ flex: 1, width: '100%' }}>
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
                         {user?.papel === 'admin' ? (
