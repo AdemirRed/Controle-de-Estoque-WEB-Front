@@ -1,15 +1,5 @@
-# API Routes - Proxy todas as requisições para contornar CORS
-/api/*           https://controle-de-estoque-web-api.onrender.com/:splat  200!
-/auth/*          https://controle-de-estoque-web-api.onrender.com/:splat  200!
-/sessao          https://controle-de-estoque-web-api.onrender.com/sessao   200!
-/usuarios/*      https://controle-de-estoque-web-api.onrender.com/usuarios/:splat  200!
-/itens/*         https://controle-de-estoque-web-api.onrender.com/itens/:splat     200!
-/item-requests/* https://controle-de-estoque-web-api.onrender.com/item-requests/:splat 200!
-/fornecedores/*  https://controle-de-estoque-web-api.onrender.com/fornecedores/:splat 200!
-/movimentacoes/* https://controle-de-estoque-web-api.onrender.com/movimentacoes/:splat 200!
-/pedidos/*       https://controle-de-estoque-web-api.onrender.com/pedidos/:splat   200!
-/relatorios/*    https://controle-de-estoque-web-api.onrender.com/relatorios/:splat 200!
-/unidades-medida/* https://controle-de-estoque-web-api.onrender.com/unidades-medida/:splat 200!
+# API Routes - Apenas requisições que começam com /api/ vão para o backend
+/api/*                    https://controle-de-estoque-web-api.onrender.com/:splat  200!
 
-# SPA Fallback - deve ser a última regra
-/*               /index.html   200
+# SPA Fallback - TODAS as outras rotas servem o index.html
+/*                        /index.html   200

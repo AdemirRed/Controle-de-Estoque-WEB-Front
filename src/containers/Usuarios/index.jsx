@@ -452,8 +452,8 @@ function Usuarios() {
                       <td>{usuario.nome}</td>
                       <td>{usuario.email}</td>
                       <td>{formatarPapel(usuario.papel)}</td>
-                      <td>{formatarData(usuario.created_at)}</td>
-                      <td>{formatarData(usuario.updated_at)}</td>
+                      <td>{formatarData(usuario.createdAt || usuario.created_at)}</td>
+                      <td>{formatarData(usuario.updatedAt || usuario.updated_at)}</td>
                       <td>
                         <ActionButtonGroup>
                           <ActionButton
@@ -515,14 +515,14 @@ function Usuarios() {
                   <DetailsRow>
                     <DetailsLabel>Criado em:</DetailsLabel>
                     <DetailsValue>
-                      {formatarData(selectedUser.created_at)}
+                      {formatarData(selectedUser.createdAt || selectedUser.created_at)}
                     </DetailsValue>
                   </DetailsRow>
                   
                   <DetailsRow>
                     <DetailsLabel>Atualizado em:</DetailsLabel>
                     <DetailsValue>
-                      {formatarData(selectedUser.updated_at)}
+                      {formatarData(selectedUser.updatedAt || selectedUser.updated_at)}
                     </DetailsValue>
                   </DetailsRow>
 
