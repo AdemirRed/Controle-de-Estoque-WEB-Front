@@ -46,40 +46,8 @@ export const NotificationProvider = ({ children }) => {
   // Efeito para solicitar permissão de notificação automaticamente
   useEffect(() => {
     const requestInitialPermission = async () => {
-      // Verificar tanto Notification API nativa quanto mobile notifications
-      if ('Notification' in window) {
-        console.log('Permissão atual de notificação:', Notification.permission);
-        
-        if (Notification.permission === 'default') {
-          console.log('Solicitando permissão de notificação...');
-          // Aguardar um pouco antes de solicitar para não ser intrusivo
-          setTimeout(async () => {
-            try {
-              const permission = await Notification.requestPermission();
-              console.log('Permissão de notificação concedida:', permission);
-              
-              // Se concedida, mostrar notificação de boas-vindas
-              if (permission === 'granted') {
-                const welcomeNotification = new Notification('🔔 Notificações Ativadas', {
-                  body: 'Você receberá notificações sobre pedidos e requisições!',
-                  icon: '/icon.png',
-                  badge: '/icon.png',
-                  tag: 'welcome-notification',
-                  requireInteraction: false,
-                  silent: true
-                });
-                
-                setTimeout(() => welcomeNotification.close(), 5000);
-              }
-            } catch (error) {
-              console.error('Erro ao solicitar permissão:', error);
-            }
-          }, 2000);
-        }
-      }
-      
-      // Também tentar via mobile notifications
       if (mobileNotifications.isSupported && mobileNotifications.permission === 'default') {
+        // Aguardar um pouco antes de solicitar para não ser intrusivo
         setTimeout(() => {
           mobileNotifications.requestPermission();
         }, 3000);
@@ -147,19 +115,6 @@ export const NotificationProvider = ({ children }) => {
     return newNotification.id;
   };
 
-  // Função específica para testes - sempre envia notificação
-  const sendTestNotification = (title, body, action) => {
-    console.log('Enviando notificação de teste:', { title, body, action });
-    
-    // Usar notificação móvel se disponível, senão usar padrão
-    if (mobileNotifications.isMobile && mobileNotifications.isAvailable()) {
-      return mobileNotifications.sendNotification(title, body, action);
-    } else {
-      showWindowsNotification(title, body, action);
-      return true;
-    }
-  };
-
   const markAsRead = (notificationId) => {
     setNotifications(prev => 
       prev.map(notif => 
@@ -182,159 +137,125 @@ export const NotificationProvider = ({ children }) => {
   };
 
   const showWindowsNotification = (title, body, action) => {
-    // Verificar se notificações estão disponíveis
-    if (!('Notification' in window)) {
-      console.warn('Este navegador não suporta notificações nativas');
-      return false;
-    }
-
-    // Verificar permissão
-    if (Notification.permission !== 'granted') {
-      console.warn('Permissão de notificação não concedida:', Notification.permission);
-      
-      // Tentar solicitar permissão se ainda não foi negada
-      if (Notification.permission === 'default') {
-        Notification.requestPermission().then(permission => {
-          console.log('Nova permissão:', permission);
-          if (permission === 'granted') {
-            // Tentar novamente
-            setTimeout(() => showWindowsNotification(title, body, action), 500);
-          }
-        });
-      }
-      return false;
-    }
-
-    try {
-      // Configurações específicas para diferentes dispositivos
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
-      const notificationOptions = {
-        body,
-        icon: '/icon.png',
-        badge: '/icon.png', // Para Android
-        requireInteraction: !isMobile, // Em mobile, auto-fechar é melhor
-        tag: `controle-estoque-${Date.now()}`, // Tag única para evitar substituição
-        data: { action },
-        vibrate: isMobile ? [200, 100, 200] : undefined, // Vibração apenas em mobile
-        silent: false,
-        renotify: true,
-        dir: 'ltr',
-        lang: 'pt-BR'
-      };
-
-      // Para mobile, adicionar mais opções
-      if (isMobile) {
-        notificationOptions.actions = [
-          {
-            action: 'open',
-            title: '📱 Abrir',
-            icon: '/icon.png'
-          }
-        ];
-      }
-
-      console.log('Criando notificação com opções:', notificationOptions);
-      const notification = new window.Notification(title, notificationOptions);
-
-      // Handler para clique na notificação
-      const handleNotificationClick = (event) => {
-        console.log('Notificação clicada:', { event, action });
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        // Configurações específicas para diferentes dispositivos
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
-        // Focar na janela/aba do navegador
-        if (window.focus) {
-          window.focus();
-        }
-        
-        // Determinar a URL de destino
-        const targetAction = event.target?.data?.action || action;
-        let targetUrl;
-        
-        if (targetAction) {
-          // Se é uma rota relativa, construir URL completa
-          if (targetAction.startsWith('/')) {
-            targetUrl = window.location.origin + targetAction;
-          } else {
-            targetUrl = targetAction;
-          }
-        } else {
-          // Se não há ação específica, ir para o dashboard
-          targetUrl = window.location.origin + '/dashboard';
-        }
-        
-        console.log('Redirecionando para:', targetUrl);
-        
-        // Para mobile, usar diferentes estratégias
+        const notificationOptions = {
+          body,
+          icon: '/icon.png',
+          badge: '/icon.png', // Para Android
+          requireInteraction: !isMobile, // Em mobile, auto-fechar é melhor
+          tag: 'controle-estoque',
+          data: { action },
+          vibrate: isMobile ? [200, 100, 200] : undefined, // Vibração apenas em mobile
+          silent: false,
+          renotify: true
+        };
+
+        // Para mobile, adicionar mais opções
         if (isMobile) {
-          // Tentar abrir na mesma aba se possível
-          if (window.location.href.includes(window.location.origin)) {
-            window.location.href = targetUrl;
-          } else {
-            window.open(targetUrl, '_blank');
-          }
-        } else {
-          // Desktop - verificar se a página está oculta
-          if (document.hidden) {
-            sessionStorage.setItem('pendingRedirect', targetUrl);
-          } else {
-            window.location.href = targetUrl;
-          }
+          notificationOptions.actions = [
+            {
+              action: 'open',
+              title: '📱 Abrir',
+              icon: '/icon.png'
+            }
+          ];
         }
-        
-        // Fechar a notificação
-        notification.close();
-      };
 
-      // Adicionar listeners
-      notification.onclick = handleNotificationClick;
-      notification.onshow = () => {
-        console.log('Notificação exibida:', title);
-      };
-      notification.onerror = (error) => {
-        console.error('Erro na notificação:', error);
-      };
-      
-      // Para mobile, também escutar ações
-      if ('addEventListener' in notification && isMobile) {
-        notification.addEventListener('notificationclick', handleNotificationClick);
-      }
+        const notification = new window.Notification(title, notificationOptions);
 
-      // Auto-fechar - tempo diferente para mobile vs desktop
-      const autoCloseTime = isMobile ? 8000 : 15000;
-      setTimeout(() => {
-        if (notification) {
+        // Handler para clique na notificação
+        const handleNotificationClick = (event) => {
+          console.log('Notificação clicada:', { event, action });
+          
+          // Focar na janela/aba do navegador
+          if (window.focus) {
+            window.focus();
+          }
+          
+          // Determinar a URL de destino
+          const targetAction = event.target?.data?.action || action;
+          let targetUrl;
+          
+          if (targetAction) {
+            // Se é uma rota relativa, construir URL completa
+            if (targetAction.startsWith('/')) {
+              targetUrl = window.location.origin + targetAction;
+            } else {
+              targetUrl = targetAction;
+            }
+          } else {
+            // Se não há ação específica, ir para o dashboard
+            targetUrl = window.location.origin + '/dashboard';
+          }
+          
+          console.log('Redirecionando para:', targetUrl);
+          
+          // Para mobile, usar diferentes estratégias
+          if (isMobile) {
+            // Tentar abrir na mesma aba se possível
+            if (window.location.href.includes(window.location.origin)) {
+              window.location.href = targetUrl;
+            } else {
+              window.open(targetUrl, '_blank');
+            }
+          } else {
+            // Desktop - verificar se a página está oculta
+            if (document.hidden) {
+              sessionStorage.setItem('pendingRedirect', targetUrl);
+            } else {
+              window.location.href = targetUrl;
+            }
+          }
+          
+          // Fechar a notificação
           notification.close();
+        };
+
+        // Adicionar listeners
+        notification.onclick = handleNotificationClick;
+        
+        // Para mobile, também escutar ações
+        if ('addEventListener' in notification && isMobile) {
+          notification.addEventListener('notificationclick', handleNotificationClick);
         }
-      }, autoCloseTime);
 
-      return true;
+        // Auto-fechar - tempo diferente para mobile vs desktop
+        const autoCloseTime = isMobile ? 8000 : 15000;
+        setTimeout(() => {
+          if (notification) {
+            notification.close();
+          }
+        }, autoCloseTime);
 
-    } catch (err) {
-      console.error('Erro ao exibir notificação:', err);
-      
-      // Fallback para mobile - tentar service worker notification
-      if ('serviceWorker' in navigator && 'showNotification' in ServiceWorkerRegistration.prototype) {
-        navigator.serviceWorker.ready.then(registration => {
-          return registration.showNotification(title, {
-            body,
-            icon: '/icon.png',
-            badge: '/icon.png',
-            tag: 'controle-estoque-fallback',
-            data: { action },
-            vibrate: [200, 100, 200],
-            actions: [
-              {
-                action: 'open',
-                title: 'Abrir'
-              }
-            ]
+      } catch (err) {
+        console.debug('Erro ao exibir notificação:', err);
+        
+        // Fallback para mobile - tentar service worker notification
+        if ('serviceWorker' in navigator && 'showNotification' in ServiceWorkerRegistration.prototype) {
+          navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification(title, {
+              body,
+              icon: '/icon.png',
+              badge: '/icon.png',
+              tag: 'controle-estoque-fallback',
+              data: { action },
+              vibrate: [200, 100, 200],
+              actions: [
+                {
+                  action: 'open',
+                  title: 'Abrir'
+                }
+              ]
+            });
+          }).catch(swErr => {
+            console.debug('Service Worker notification também falhou:', swErr);
           });
-        }).catch(swErr => {
-          console.error('Service Worker notification também falhou:', swErr);
-        });
+        }
       }
-      
-      return false;
     }
   };
 
@@ -345,19 +266,7 @@ export const NotificationProvider = ({ children }) => {
       addNotification,
       markAsRead,
       markAllAsRead,
-      clearNotifications,
-      sendTestNotification, // Adicionar função de teste
-      notificationPermission: mobileNotifications.permission || (typeof Notification !== 'undefined' ? Notification.permission : 'denied'),
-      requestNotificationPermission: async () => {
-        if ('Notification' in window) {
-          const permission = await Notification.requestPermission();
-          if (mobileNotifications.requestPermission) {
-            await mobileNotifications.requestPermission();
-          }
-          return permission;
-        }
-        return 'denied';
-      }
+      clearNotifications
     }}>
       {children}
     </NotificationContext.Provider>

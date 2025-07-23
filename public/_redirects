@@ -10,6 +10,9 @@
 /item-requests           /index.html   200
 /unidades-medida         /index.html   200
 
+# Zoho Domain Verification - Serve arquivo de verificação
+/zohoverify/*            /zohoverify/:splat  200
+
 # API Routes - Requisições da API vão para o backend
 /auth/*                  https://controle-de-estoque-web-api.onrender.com/auth/:splat  200
 /sessao                  https://controle-de-estoque-web-api.onrender.com/sessao  200

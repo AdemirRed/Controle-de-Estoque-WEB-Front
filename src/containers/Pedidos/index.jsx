@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useEffect, useState, useRef } from 'react';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
@@ -7,9 +8,7 @@ import MenuSidebar from '../../components/MenuSidebar';
 import Paginacao from '../../components/Paginacao';
 import FiltrosPadrao from '../../components/FiltrosPadrao';
 import { useAuth } from '../../context/AuthContext';
-import { useNotifications } from '../../context/NotificationContext';
 import { PedidoService } from '../../services/pedidoService';
-import api from '../../services/api';
 import {
   Button,
   Input,
@@ -56,7 +55,6 @@ const statusColors = {
 
 const Pedidos = () => {
   const { user, signOut } = useAuth();
-  const { addNotification } = useNotifications();
   const location = useLocation();
   const highlightRef = useRef(null);
   const [pedidos, setPedidos] = useState([]);
@@ -74,7 +72,6 @@ const Pedidos = () => {
   const [itens, setItens] = useState([]);
   const [fornecedores, setFornecedores] = useState([]);
   const [unidadesMedida, setUnidadesMedida] = useState([]);
-  const [usuarios, setUsuarios] = useState([]);
   const [error, setError] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
 
@@ -98,61 +95,6 @@ const Pedidos = () => {
 
   const [busca, setBusca] = useState('');
   const [buscaPeriodo, setBuscaPeriodo] = useState([null, null]);
-
-  // Função para resolver nome do usuário
-  const resolverNomeUsuario = (pedido) => {
-    // Se já tem o nome direto e não é um UUID/ID
-    if (pedido.criado_por && typeof pedido.criado_por === 'string' && 
-        !pedido.criado_por.includes('@') && 
-        !pedido.criado_por.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i) &&
-        !pedido.criado_por.match(/^\d+$/)) {
-      return pedido.criado_por;
-    }
-    
-    // Se tem usuario_id, buscar na lista de usuários
-    if (pedido.usuario_id && usuarios.length > 0) {
-      const usuario = usuarios.find(u => u.id === pedido.usuario_id);
-      if (usuario) {
-        return usuario.nome;
-      }
-    }
-    
-    // Se criado_por é um UUID ou ID, buscar na lista de usuários
-    if (pedido.criado_por && usuarios.length > 0) {
-      // Buscar por ID exato (string ou number)
-      let usuario = usuarios.find(u => String(u.id) === String(pedido.criado_por));
-      
-      // Se não encontrou, buscar por email
-      if (!usuario) {
-        usuario = usuarios.find(u => u.email === pedido.criado_por);
-      }
-      
-      // Se não encontrou, buscar por nome
-      if (!usuario) {
-        usuario = usuarios.find(u => u.nome === pedido.criado_por);
-      }
-      
-      if (usuario) {
-        return usuario.nome;
-      }
-    }
-    
-    // Se tem usuario (objeto completo)
-    if (pedido.usuario && typeof pedido.usuario === 'object') {
-      return pedido.usuario.nome || pedido.usuario.email || 'Usuário não identificado';
-    }
-    
-    // Fallback - se é um UUID ou número, mostrar como "ID não encontrado"
-    if (pedido.criado_por) {
-      if (pedido.criado_por.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i) ||
-          pedido.criado_por.match(/^\d+$/)) {
-        return `ID: ${pedido.criado_por.slice(0, 8)}...`;
-      }
-      return pedido.criado_por;
-    }
-    
-    return 'Usuário não identificado';
-  };
 
   // Processar parâmetros da URL para highlight
   useEffect(() => {
@@ -230,25 +172,6 @@ const Pedidos = () => {
   }, []);
 
   useEffect(() => {
-    const fetchUsuarios = async () => {
-      try {
-        const response = await api.get('/usuarios');
-        setUsuarios(response.data);
-      } catch (err) {
-        console.error('Erro ao carregar usuários:', err);
-        // Tentar endpoint alternativo se o primeiro falhar
-        try {
-          const response = await api.get('/usuario');
-          setUsuarios(response.data);
-        } catch (altErr) {
-          console.error('Erro no endpoint alternativo também:', altErr);
-        }
-      }
-    };
-    fetchUsuarios();
-  }, []);
-
-  useEffect(() => {
     const fetchPedidos = async () => {
       setLoading(true);
       setError(null);
@@ -306,23 +229,6 @@ const Pedidos = () => {
       }
 
       await PedidoService.criarPedido(body);
-      
-      // Notificação automática para o usuário que criou o pedido
-      const itemNomeParaNotificacao = novoPedido.itemId 
-        ? itens.find(i => i.id === novoPedido.itemId)?.nome 
-        : novoPedido.itemNome;
-        
-      addNotification({
-        title: '✅ Pedido Criado com Sucesso',
-        body: `Seu pedido de ${itemNomeParaNotificacao || 'item'} (Qtd: ${novoPedido.quantidade}) foi enviado e está aguardando aprovação.`,
-        message: `Seu pedido de ${itemNomeParaNotificacao || 'item'} (Qtd: ${novoPedido.quantidade}) foi enviado e está aguardando aprovação.`,
-        type: 'pedido_criado',
-        action: '/pedidos'
-      });
-      
-      // Toast de sucesso
-      toast.success('Pedido criado com sucesso!');
-      
       setNovoPedido({ itemId: '', itemNome: '', quantidade: '', unidadeMedidaId: '', observacoes: '', fornecedorId: '' });
       const res = await PedidoService.listarPedidos();
       setPedidos(res.data);
@@ -336,9 +242,8 @@ const Pedidos = () => {
 
   const handleStatusChange = async (id, status, fornecedorId = null) => {
     try {
-      const pedido = pedidos.find(p => p.id === id);
-      
       if (status === 'aprovado') {
+        let pedido = pedidos.find(p => p.id === id);
         let fornecedorSelecionado = fornecedorId || pedido?.fornecedor_id;
         if (!fornecedorSelecionado) {
           // Abre modal para selecionar fornecedor
@@ -349,36 +254,12 @@ const Pedidos = () => {
       } else {
         await PedidoService.atualizarPedido(id, { status });
       }
-      
-      // Notificação automática para mudança de status
-      if (pedido) {
-        const itemNome = itens.find(i => i.id === pedido.item_id)?.nome || pedido.item_nome || 'item';
-        const statusLabels = {
-          pendente: 'Pendente',
-          aprovado: 'Aprovado ✅',
-          rejeitado: 'Rejeitado ❌',
-          entregue: 'Entregue 📦'
-        };
-        
-        addNotification({
-          title: `Pedido ${statusLabels[status] || status}`,
-          body: `O pedido de ${itemNome} (ID: #${id.toString().slice(-6).toUpperCase()}) foi ${statusLabels[status]?.toLowerCase() || status}.`,
-          message: `O pedido de ${itemNome} foi ${statusLabels[status]?.toLowerCase() || status}.`,
-          type: 'pedido_status_change',
-          action: `/pedidos?highlight=${id}`
-        });
-        
-        // Toast de feedback
-        toast.success(`Pedido ${statusLabels[status]?.toLowerCase() || status} com sucesso!`);
-      }
-      
       const res = await PedidoService.listarPedidos();
       setPedidos(res.data);
       setError(null);
     } catch (err) {
       setError(err?.response?.data?.message || 'Erro ao atualizar status');
       console.error('Erro ao atualizar status');
-      toast.error('Erro ao atualizar status do pedido');
     }
   };
 
@@ -392,39 +273,20 @@ const Pedidos = () => {
 
   const handleRejectConfirm = async () => {
     if (!modalRejeicao.motivo.trim()) {
-      toast.error('Por favor, informe o motivo da rejeição');
+      console.error('Por favor, informe o motivo da rejeição');
       return;
     }
 
     try {
-      const pedido = pedidos.find(p => p.id === modalRejeicao.pedidoId);
-      
       await PedidoService.atualizarPedido(modalRejeicao.pedidoId, { 
         status: 'rejeitado',
         motivo_rejeicao: modalRejeicao.motivo.trim()
       });
-      
-      // Notificação automática para rejeição
-      if (pedido) {
-        const itemNome = itens.find(i => i.id === pedido.item_id)?.nome || pedido.item_nome || 'item';
-        
-        addNotification({
-          title: '❌ Pedido Rejeitado',
-          body: `O pedido de ${itemNome} foi rejeitado. Motivo: ${modalRejeicao.motivo.trim()}`,
-          message: `O pedido de ${itemNome} foi rejeitado. Motivo: ${modalRejeicao.motivo.trim()}`,
-          type: 'pedido_rejeitado',
-          action: `/pedidos?highlight=${modalRejeicao.pedidoId}`
-        });
-        
-        toast.info('Pedido rejeitado e usuário notificado');
-      }
-      
       const res = await PedidoService.listarPedidos();
       setPedidos(res.data);
       setModalRejeicao({ open: false, pedidoId: null, motivo: '' });
     } catch (err) {
       console.error('Erro ao rejeitar pedido');
-      toast.error('Erro ao rejeitar pedido');
     }
   };
 
@@ -433,23 +295,11 @@ const Pedidos = () => {
   };
 
   const handleDeletePedido = async (id) => {
-    // Verificar se o pedido ainda está pendente
-    const pedido = pedidos.find(p => p.id === id);
-    if (!pedido) {
-      toast.error('Pedido não encontrado!');
-      return;
-    }
-    
-    if (pedido.status !== 'pendente') {
-      toast.error('Apenas pedidos pendentes podem ser excluídos!');
-      return;
-    }
-    
-    if (!window.confirm(`Tem certeza que deseja excluir o pedido #${id}?\n\nEsta ação não pode ser desfeita.`)) return;
+    if (!window.confirm('Tem certeza que deseja excluir este pedido?')) return;
     
     try {
       setLoading(true);
-      console.log('Tentando excluir pedido ID:', id, 'Status:', pedido.status);
+      console.log('Tentando excluir pedido ID:', id);
       
       const response = await PedidoService.excluirPedido(id);
       console.log('Resposta da exclusão:', response);
@@ -463,7 +313,6 @@ const Pedidos = () => {
     } catch (err) {
       console.error('Erro detalhado ao excluir pedido:', {
         id,
-        pedidoStatus: pedido.status,
         error: err,
         response: err.response?.data,
         status: err.response?.status,
@@ -478,8 +327,6 @@ const Pedidos = () => {
         errorMessage = 'Você não tem permissão para excluir este pedido.';
       } else if (err.response?.status === 409) {
         errorMessage = 'Não é possível excluir este pedido. Verifique se não há dependências.';
-      } else if (err.response?.status === 400) {
-        errorMessage = 'Apenas pedidos pendentes podem ser excluídos.';
       } else if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
       }
@@ -761,7 +608,7 @@ const Pedidos = () => {
                       </div>
                       {/* Novo: Exibir criado por */}
                       <div style={{ marginBottom: 2, fontSize: 14, color: '#b2bac2' }}>
-                        <strong>Criado por:</strong> {resolverNomeUsuario(pedido)}
+                        <strong>Criado por:</strong> {pedido.criado_por || '-'}
                       </div>
                       {pedido.motivo_rejeicao && (
                         <div style={{ marginBottom: 2, fontSize: 14, color: '#ff6b6b' }}>
@@ -775,12 +622,9 @@ const Pedidos = () => {
                       )}
                     </div>
                     <RequestItemActions>
-                      {/* Só mostrar botão de excluir para pedidos pendentes */}
-                      {pedido.status === 'pendente' && (
-                        <ActionButton bgColor="#c91407" onClick={() => handleDeletePedido(pedido.id)} title="Excluir pedido">
-                          Excluir
-                        </ActionButton>
-                      )}
+                      <ActionButton bgColor="#c91407" onClick={() => handleDeletePedido(pedido.id)} title="Excluir pedido">
+                        Excluir
+                      </ActionButton>
                     </RequestItemActions>
                   </RequestItem>
                 );
