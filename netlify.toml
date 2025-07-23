@@ -29,6 +29,13 @@
     Access-Control-Allow-Headers = "Content-Type, Authorization, Accept"
 
 # Redirects com force para garantir que funcionem
+# IMPORTANTE: Redirect para verificação Zoho DEVE vir ANTES do catch-all
+[[redirects]]
+  from = "/zohoverify/*"
+  to = "/zohoverify/:splat"
+  status = 200
+  force = false
+
 [[redirects]]
   from = "/sessao"
   to = "https://controle-de-estoque-web-api.onrender.com/sessao"

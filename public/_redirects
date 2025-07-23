@@ -1,3 +1,6 @@
+# Zoho Domain Verification - DEVE vir PRIMEIRO
+/zohoverify/verifyforzoho.html   /zohoverify/verifyforzoho.html  200
+
 # SPA Routes - Rotas específicas do frontend (servem index.html)
 /login                    /index.html   200
 /register                 /index.html   200
